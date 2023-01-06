@@ -1,6 +1,7 @@
 <div class="container">
   <div class="left-panel">
     <div
+      #tileMapElement
       class="tile-map"
       [style]="{
         'grid-template-columns': 'repeat(' + numberOfCols + ', 20px)',
@@ -21,8 +22,8 @@
   </div>
 
   <div class="right-panel">
-    <pre><code>function floydWarshall(adjacencyMatrix):
-  dist = copy of adjacencyMatrix
+    <pre><code>function floydWarshall(<span [ngClass]="{'code-highlight': stepOne}" #adjacencyMatrixCodeElement>adjacencyMatrix</span>):
+  <span [ngClass]="{'code-highlight': stepTwo}">dist = copy of adjacencyMatrix</span>
   next = new matrix of size |V| x |V|
   for u from 0 to |V|:
     for v from 0 to |V|:

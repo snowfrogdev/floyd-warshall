@@ -1,4 +1,5 @@
-import { Component } from '@angular/core';
+import { animate, AnimationBuilder, style } from '@angular/animations';
+import { Component, ElementRef, ViewChild } from '@angular/core';
 
 @Component({
   selector: 'app-root',
@@ -6,9 +7,21 @@ import { Component } from '@angular/core';
   styleUrls: ['./app.component.css'],
 })
 export class AppComponent {
+  @ViewChild('tileMapElement')
+  tileMapElement!: ElementRef<HTMLElement>;
+  @ViewChild('adjacencyMatrixCodeElement')
+  adjacencyMatrixCodeElement!: ElementRef<HTMLElement>;
+
   tiles: Tile[] = [];
   numberOfCols = 0;
   numberOfRows = 0;
+
+  /* Algo state */
+  dist: number[][] | undefined;
+  stepOne = false;
+  stepTwo = false;
+
+  constructor(private animationBuilder: AnimationBuilder) {}
 
   ngOnInit() {
     const tileMap = `#####################
@@ -88,9 +101,49 @@ export class AppComponent {
     return adjacencyMatrix;
   }
 
-  stepForward() {};
+  stepForward() {
+    if (this.stepOne) {
+      this.stepOne = false;
+      this.stepTwo = true;
+      return;
+    }
+    const tileMapElement = this.tileMapElement.nativeElement;
+    const codeElement = this.adjacencyMatrixCodeElement.nativeElement;
+    const mapOffsetLeft =
+      tileMapElement.offsetLeft + tileMapElement.offsetWidth / 2;
+    const mapOffsetTop =
+      tileMapElement.offsetTop + tileMapElement.offsetHeight / 2;
+    const codeOffsetLeft = codeElement.offsetLeft + codeElement.offsetWidth / 2;
+    const codeOffsetTop = codeElement.offsetTop + codeElement.offsetHeight / 2;
+    const animation = this.animationBuilder.build([
+      animate(
+        '500ms cubic-bezier(.3,.8,.26,.94)',
+        style({
+          transform: `translate(${codeOffsetLeft - mapOffsetLeft}px, ${
+            codeOffsetTop - mapOffsetTop
+          }px) scale(0)`,
+        })
+      ),
+    ]);
+    const player = animation.create(this.tileMapElement.nativeElement);
+    player.play();
+    player.onDone(() => {
+      player.destroy();
+      this.stepOne = true;
+    });
+  }
 
-  stepBackward() {};
+  stepBackward() {
+    if (this.stepTwo) {
+      this.stepTwo = false;
+      this.stepOne = true;
+      return;
+    }
+    if (this.stepOne) {
+      this.stepOne = false;
+      return;
+    }
+  }
 }
 
 class Tile {
