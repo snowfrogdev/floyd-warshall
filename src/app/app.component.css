@@ -3,7 +3,7 @@
   flex-direction: row;
   justify-content: center;
   align-items: center;
-  padding: 1rem;
+  padding: 0.5rem;
 }
 
 .left-panel {
@@ -31,6 +31,7 @@
 
 .collections {
   margin: 0.5rem;
+  height: 4rem;
 }
 
 .controls {
@@ -49,4 +50,8 @@
 
 .code-highlight {
   background-color: yellow;
+}
+
+.hidden {
+  visibility: hidden;
 }

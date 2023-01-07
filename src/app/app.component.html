@@ -1,7 +1,7 @@
 <div class="container">
   <div class="left-panel">
     <div class="collections">
-      <div class="dist-matrix">
+      <div [@distAnimation]="distForDisplay.length" class="dist-matrix">
         <div [@distAnimation]="row.length" *ngFor="let row of distForDisplay" style="display: flex">
           <div
             *ngFor="let element of row"
@@ -22,11 +22,7 @@
         'grid-template-rows': 'repeat(' + numberOfRows + ', 1.25rem)'
       }"
     >
-      <div
-        *ngFor="let tile of tiles"
-        class="tile"
-        [style.background-color]="tile.color"
-      ></div>
+      <div *ngFor="let tile of tiles" class="tile" [style.background-color]="tile.color"></div>
     </div>
 
     <div class="controls">
@@ -36,7 +32,7 @@
   </div>
 
   <div class="right-panel">
-    <pre><code>function floydWarshall(<span [ngClass]="{'code-highlight': stepTwo}" #adjacencyMatrixCodeElement>adjacencyMatrix</span>):
+    <pre><code>function floydWarshall(<span [ngClass]="{'code-highlight': stepTwo | async}" #adjacencyMatrixCodeElement>adjacencyMatrix</span>):
   <span [ngClass]="{'code-highlight': stepThree}">dist = copy of adjacencyMatrix</span>
   <span [ngClass]="{'code-highlight': stepFour}">next = new matrix of size |V| x |V|</span>
   for u from 0 to |V|:

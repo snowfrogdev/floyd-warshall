@@ -1,5 +1,6 @@
 import { animate, AnimationBuilder, query, stagger, style, transition, trigger } from '@angular/animations';
 import { ChangeDetectionStrategy, Component, ElementRef, ViewChild } from '@angular/core';
+import { BehaviorSubject } from 'rxjs';
 
 @Component({
   selector: 'app-root',
@@ -7,12 +8,23 @@ import { ChangeDetectionStrategy, Component, ElementRef, ViewChild } from '@angu
   styleUrls: ['./app.component.css'],
   animations: [
     trigger('distAnimation', [
-      transition('* => *', [
+      transition(':enter', [
         query(
           ':enter',
           [
             style({ opacity: 0, transform: 'translateY(-100px)' }),
             stagger(5, [animate('500ms cubic-bezier(0.35, 0, 0.25, 1)', style({ opacity: 1, transform: 'none' }))]),
+          ],
+          { optional: true }
+        ),
+      ]),
+      transition(':leave', [
+        query(
+          ':leave',
+          [
+            stagger(5, [
+              animate('500ms cubic-bezier(0.35, 0, 0.25, 1)', style({ opacity: 0, transform: 'translateY(-100px)' })),
+            ]),
           ],
           { optional: true }
         ),
@@ -33,11 +45,10 @@ export class AppComponent {
   adjacencyMatrix!: number[][];
   distForDisplay: number[][] = [];
 
-
   /* Algo state */
   dist: number[][] | undefined;
-  stepOne = true;
-  stepTwo = false;
+  stepOne = new BehaviorSubject<boolean>(true);
+  stepTwo = new BehaviorSubject<boolean>(false);
   stepThree = false;
   stepFour = false;
 
@@ -128,13 +139,13 @@ export class AppComponent {
       return;
     }
 
-    if (this.stepTwo) {
+    if (this.stepTwo.value) {
       this.stepThree = true;
-      this.stepTwo = false;
+      this.stepTwo.next(false);
       return;
     }
 
-    if (this.stepOne) {
+    if (this.stepOne.value) {
       const tileMapElement = this.tileMapElement.nativeElement;
       const codeElement = this.adjacencyMatrixCodeElement.nativeElement;
       const mapOffsetLeft = tileMapElement.offsetLeft + tileMapElement.offsetWidth / 2;
@@ -152,9 +163,9 @@ export class AppComponent {
       const player = animation.create(this.tileMapElement.nativeElement);
       player.play();
       player.onDone(() => {
+        this.stepTwo.next(true);
+        this.stepOne.next(false);
         player.destroy();
-        this.stepTwo = true;
-        this.stepOne = false;
       });
     }
   }
@@ -163,16 +174,40 @@ export class AppComponent {
     if (this.stepFour) {
       this.stepFour = false;
       this.stepThree = true;
+      this.distForDisplay = [];
+      this.dist = [];
       return;
     }
     if (this.stepThree) {
       this.stepThree = false;
-      this.stepTwo = true;
+      this.stepTwo.next(true);
       return;
     }
-    if (this.stepTwo) {
-      this.stepTwo = false;
-      this.stepOne = true;
+    if (this.stepTwo.value) {
+      this.stepTwo.next(false);
+      this.stepOne.next(true);
+      const tileMapElement = this.tileMapElement.nativeElement;
+      const codeElement = this.adjacencyMatrixCodeElement.nativeElement;
+      const mapOffsetLeft = tileMapElement.offsetLeft + tileMapElement.offsetWidth / 2;
+      const mapOffsetTop = tileMapElement.offsetTop + tileMapElement.offsetHeight / 2;
+      const codeOffsetLeft = codeElement.offsetLeft + codeElement.offsetWidth / 2;
+      const codeOffsetTop = codeElement.offsetTop + codeElement.offsetHeight / 2;
+      const animation = this.animationBuilder.build([
+        style({
+          transform: `translate(${codeOffsetLeft - mapOffsetLeft}px, ${codeOffsetTop - mapOffsetTop}px) scale(0)`,
+        }),
+        animate(
+          '500ms cubic-bezier(.74,.06,.7,.2)',
+          style({
+            transform: `translate(0, 0) scale(1)`,
+          })
+        ),
+      ]);
+      const player = animation.create(this.tileMapElement.nativeElement);
+      player.play();
+      player.onDone(() => {
+        player.destroy();
+      });
       return;
     }
   }
