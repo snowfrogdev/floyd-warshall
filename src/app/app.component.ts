@@ -1,10 +1,25 @@
-import { animate, AnimationBuilder, style } from '@angular/animations';
-import { Component, ElementRef, ViewChild } from '@angular/core';
+import { animate, AnimationBuilder, query, stagger, style, transition, trigger } from '@angular/animations';
+import { ChangeDetectionStrategy, Component, ElementRef, ViewChild } from '@angular/core';
 
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.css'],
+  animations: [
+    trigger('distAnimation', [
+      transition('* => *', [
+        query(
+          ':enter',
+          [
+            style({ opacity: 0, transform: 'translateY(-100px)' }),
+            stagger(5, [animate('500ms cubic-bezier(0.35, 0, 0.25, 1)', style({ opacity: 1, transform: 'none' }))]),
+          ],
+          { optional: true }
+        ),
+      ]),
+    ]),
+  ],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AppComponent {
   @ViewChild('tileMapElement')
@@ -12,14 +27,19 @@ export class AppComponent {
   @ViewChild('adjacencyMatrixCodeElement')
   adjacencyMatrixCodeElement!: ElementRef<HTMLElement>;
 
-  tiles: Tile[] = [];
+  tiles!: Tile[];
   numberOfCols = 0;
   numberOfRows = 0;
+  adjacencyMatrix!: number[][];
+  distForDisplay: number[][] = [];
+
 
   /* Algo state */
   dist: number[][] | undefined;
-  stepOne = false;
+  stepOne = true;
   stepTwo = false;
+  stepThree = false;
+  stepFour = false;
 
   constructor(private animationBuilder: AnimationBuilder) {}
 
@@ -54,7 +74,7 @@ export class AppComponent {
       .split('')
       .map((char) => (char === '#' ? new Tile('black') : new Tile('white')));
 
-    const adjacencyMatrix = this.generateAdjacencyMatrix(tileMap);
+    this.adjacencyMatrix = this.generateAdjacencyMatrix(tileMap);
   }
 
   generateAdjacencyMatrix(tileMap: string): number[][] {
@@ -66,9 +86,7 @@ export class AppComponent {
     const numCols = rows[0].length;
 
     // Initialize the adjacency matrix with all zeros
-    const adjacencyMatrix = Array.from({ length: numRows * numCols }, () =>
-      Array(numRows * numCols).fill(0)
-    );
+    const adjacencyMatrix = Array.from({ length: numRows * numCols }, () => Array(numRows * numCols).fill(0));
 
     // Iterate through the rows and columns of the map
     for (let i = 0; i < numRows; i++) {
@@ -102,50 +120,99 @@ export class AppComponent {
   }
 
   stepForward() {
-    if (this.stepOne) {
-      this.stepOne = false;
-      this.stepTwo = true;
+    if (this.stepThree) {
+      this.stepThree = false;
+      this.stepFour = true;
+      this.dist = [...this.adjacencyMatrix];
+      this.distForDisplay = resample(this.dist, 10);
       return;
     }
-    const tileMapElement = this.tileMapElement.nativeElement;
-    const codeElement = this.adjacencyMatrixCodeElement.nativeElement;
-    const mapOffsetLeft =
-      tileMapElement.offsetLeft + tileMapElement.offsetWidth / 2;
-    const mapOffsetTop =
-      tileMapElement.offsetTop + tileMapElement.offsetHeight / 2;
-    const codeOffsetLeft = codeElement.offsetLeft + codeElement.offsetWidth / 2;
-    const codeOffsetTop = codeElement.offsetTop + codeElement.offsetHeight / 2;
-    const animation = this.animationBuilder.build([
-      animate(
-        '500ms cubic-bezier(.3,.8,.26,.94)',
-        style({
-          transform: `translate(${codeOffsetLeft - mapOffsetLeft}px, ${
-            codeOffsetTop - mapOffsetTop
-          }px) scale(0)`,
-        })
-      ),
-    ]);
-    const player = animation.create(this.tileMapElement.nativeElement);
-    player.play();
-    player.onDone(() => {
-      player.destroy();
-      this.stepOne = true;
-    });
+
+    if (this.stepTwo) {
+      this.stepThree = true;
+      this.stepTwo = false;
+      return;
+    }
+
+    if (this.stepOne) {
+      const tileMapElement = this.tileMapElement.nativeElement;
+      const codeElement = this.adjacencyMatrixCodeElement.nativeElement;
+      const mapOffsetLeft = tileMapElement.offsetLeft + tileMapElement.offsetWidth / 2;
+      const mapOffsetTop = tileMapElement.offsetTop + tileMapElement.offsetHeight / 2;
+      const codeOffsetLeft = codeElement.offsetLeft + codeElement.offsetWidth / 2;
+      const codeOffsetTop = codeElement.offsetTop + codeElement.offsetHeight / 2;
+      const animation = this.animationBuilder.build([
+        animate(
+          '500ms cubic-bezier(.3,.8,.26,.94)',
+          style({
+            transform: `translate(${codeOffsetLeft - mapOffsetLeft}px, ${codeOffsetTop - mapOffsetTop}px) scale(0)`,
+          })
+        ),
+      ]);
+      const player = animation.create(this.tileMapElement.nativeElement);
+      player.play();
+      player.onDone(() => {
+        player.destroy();
+        this.stepTwo = true;
+        this.stepOne = false;
+      });
+    }
   }
 
   stepBackward() {
+    if (this.stepFour) {
+      this.stepFour = false;
+      this.stepThree = true;
+      return;
+    }
+    if (this.stepThree) {
+      this.stepThree = false;
+      this.stepTwo = true;
+      return;
+    }
     if (this.stepTwo) {
       this.stepTwo = false;
       this.stepOne = true;
       return;
     }
-    if (this.stepOne) {
-      this.stepOne = false;
-      return;
+  }
+
+  getDistElementBackgroundColor(value: number): string {
+    // If value is infinity, return red
+    if (value === Infinity) {
+      return 'red';
     }
+
+    const ratio = (2 * (value - 0)) / (this.numberOfCols * this.numberOfRows - 0);
+    let b = 255;
+    let g = Math.max(0, Math.ceil(255 * (1 - ratio)));
+    let r = Math.max(0, Math.ceil(255 * (1 - ratio)));
+    return `rgb(${r}, ${g}, ${b})`;
   }
 }
 
 class Tile {
   constructor(public color: string) {}
+}
+
+function resample(matrix: number[][], factor: number): number[][] {
+  const newRows = Math.floor(matrix.length / factor);
+  const newCols = Math.floor(matrix[0].length / factor);
+  const resampled: number[][] = [];
+
+  for (let row = 0; row < newRows; row++) {
+    const newRow: number[] = [];
+    for (let col = 0; col < newCols; col++) {
+      let sum = 0;
+      for (let i = 0; i < factor; i++) {
+        for (let j = 0; j < factor; j++) {
+          sum += matrix[row * factor + i][col * factor + j];
+        }
+      }
+      newRow.push(sum / (factor * factor));
+    }
+    resampled.push(newRow);
+  }
+
+  return resampled;
 }

@@ -1,11 +1,25 @@
 <div class="container">
   <div class="left-panel">
+    <div class="collections">
+      <div class="dist-matrix">
+        <div [@distAnimation]="row.length" *ngFor="let row of distForDisplay" style="display: flex">
+          <div
+            *ngFor="let element of row"
+            class="dist-element"
+            [ngStyle]="{
+              'background-color': 'blue'
+            }"
+          ></div>
+        </div>
+      </div>
+    </div>
+
     <div
       #tileMapElement
       class="tile-map"
       [style]="{
-        'grid-template-columns': 'repeat(' + numberOfCols + ', 20px)',
-        'grid-template-rows': 'repeat(' + numberOfRows + ', 20px)'
+        'grid-template-columns': 'repeat(' + numberOfCols + ', 1.25rem)',
+        'grid-template-rows': 'repeat(' + numberOfRows + ', 1.25rem)'
       }"
     >
       <div
@@ -22,9 +36,9 @@
   </div>
 
   <div class="right-panel">
-    <pre><code>function floydWarshall(<span [ngClass]="{'code-highlight': stepOne}" #adjacencyMatrixCodeElement>adjacencyMatrix</span>):
-  <span [ngClass]="{'code-highlight': stepTwo}">dist = copy of adjacencyMatrix</span>
-  next = new matrix of size |V| x |V|
+    <pre><code>function floydWarshall(<span [ngClass]="{'code-highlight': stepTwo}" #adjacencyMatrixCodeElement>adjacencyMatrix</span>):
+  <span [ngClass]="{'code-highlight': stepThree}">dist = copy of adjacencyMatrix</span>
+  <span [ngClass]="{'code-highlight': stepFour}">next = new matrix of size |V| x |V|</span>
   for u from 0 to |V|:
     for v from 0 to |V|:
       if u == v:

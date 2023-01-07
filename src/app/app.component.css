@@ -3,7 +3,7 @@
   flex-direction: row;
   justify-content: center;
   align-items: center;
-  padding: 10px;
+  padding: 1rem;
 }
 
 .left-panel {
@@ -29,8 +29,22 @@
   border: 1px solid black;
 }
 
+.collections {
+  margin: 0.5rem;
+}
+
 .controls {
-  margin: 5px;
+  margin: 0.5rem;
+}
+
+.dist-matrix {
+  display: flex;
+  flex-direction: column;
+}
+
+.dist-element {
+  width: 0.09rem;
+  height: 0.09rem;
 }
 
 .code-highlight {
