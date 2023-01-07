@@ -26,29 +26,38 @@
     </div>
 
     <div class="controls">
-      <button (click)="stepBackward()">Backward</button>
-      <button (click)="stepForward()">Forward</button>
+      <div>
+        <button (click)="stepBackward()">Backward</button>
+        <button (click)="reset()">Reset</button>
+        <button (click)="play()">Play</button>
+        <button (click)="pause()">Pause</button>
+        <button (click)="stepForward()">Forward</button>
+      </div>
+      <div>
+        <button (click)="slowDown()">-</button>
+        <button (click)="speedUp()">+</button>
+      </div>
     </div>
   </div>
-
+  {{ currentLine }}
   <div class="right-panel">
-    <pre><code><span>function floydWarshall(<span #adjacencyMatrixCodeElement>adjacencyMatrix</span>):</span>
-  <span [appCodeLine]="2" [lineToHighlight]="currentLine">dist = copy of adjacencyMatrix</span>
-  <span [appCodeLine]="3" [lineToHighlight]="currentLine">next = new matrix of size |V| x |V|</span>
-  <span [appCodeLine]="4" [lineToHighlight]="currentLine">for u from 0 to |V|:</span>
-    for v from 0 to |V|:
-      if u == v:
-        dist[v][v] = 0
-        next[v][v] = v
-      else if adjacenyMatrix[u][v] != 0:
-        next[u][v] = j
+    <pre><code><span>function floydWarshall(<span #adjacencyMatrixCodeElement [matTooltip]="adjacencyMatrix | json">adjacencyMatrix</span>):</span>
+  <span [appCodeLine]="2" [lineToHighlight]="currentLine"><span [matTooltip]="dist | json">dist</span> = copy of <span [matTooltip]="adjacencyMatrix | json">adjacencyMatrix</span></span>
+  <span [appCodeLine]="3" [lineToHighlight]="currentLine"><span [matTooltip]="next | json">next</span> = new matrix of size <span [matTooltip]="V | json">|V|</span> x <span [matTooltip]="V | json">|V|</span></span>
+  <span [appCodeLine]="4" [lineToHighlight]="currentLine">for <span [matTooltip]="u | json">u</span> from 0 to <span [matTooltip]="V | json">|V|</span> - 1:</span>
+    <span [appCodeLine]="5" [lineToHighlight]="currentLine">for <span [matTooltip]="v | json">v</span> from 0 to <span [matTooltip]="V | json">|V|</span> - 1:</span>
+      <span [appCodeLine]="6" [lineToHighlight]="currentLine">if <span [matTooltip]="u | json">u</span> == <span [matTooltip]="v | json">v</span>:</span>
+        <span [appCodeLine]="7" [lineToHighlight]="currentLine">dist[<span [matTooltip]="v | json">v</span>][<span [matTooltip]="v | json">v</span>] = 0</span>
+        <span [appCodeLine]="8" [lineToHighlight]="currentLine">next[<span [matTooltip]="v | json">v</span>][<span [matTooltip]="v | json">v</span>] = <span [matTooltip]="v | json">v</span></span>
+      <span [appCodeLine]="9" [lineToHighlight]="currentLine">else if adjacenyMatrix[<span [matTooltip]="u | json">u</span>][<span [matTooltip]="v | json">v</span>] != 0:</span>
+        <span [appCodeLine]="10" [lineToHighlight]="currentLine">next[<span [matTooltip]="u | json">u</span>][<span [matTooltip]="v | json">v</span>] = <span [matTooltip]="v | json">v</span></span>
       else:
-        dist[u][v] = infinity
-        next[u][v] = null
+        <span [appCodeLine]="12" [lineToHighlight]="currentLine">dist[<span [matTooltip]="u | json">u</span>][<span [matTooltip]="v | json">v</span>] = infinity</span>
+        <span [appCodeLine]="13" [lineToHighlight]="currentLine">next[<span [matTooltip]="u | json">u</span>][<span [matTooltip]="v | json">v</span>] = null</span>
 
-  for k from 0 to |V|:
-    for i from 0 to |V|:
-      for j from 0 to |V|:
+  <span [appCodeLine]="15" [lineToHighlight]="currentLine">for k from 0 to |V| - 1:</span>
+    for i from 0 to |V| - 1:
+      for j from 0 to |V| - 1:
         if dist[i][j] > dist[i][k] + dist[k][j]:
           dist[i][j] = dist[i][k] + dist[k][j]
           next[i][j] = next[i][k]

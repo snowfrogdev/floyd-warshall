@@ -1,6 +1,8 @@
 import { animate, AnimationBuilder, query, stagger, style, transition, trigger } from '@angular/animations';
-import { ChangeDetectionStrategy, Component, ElementRef, ViewChild } from '@angular/core';
-import { BehaviorSubject } from 'rxjs';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, ViewChild, ViewChildren } from '@angular/core';
+import { MatTooltip } from '@angular/material/tooltip';
+import { animationFrameScheduler, asapScheduler, asyncScheduler, BehaviorSubject, interval, Subject, Subscription, takeUntil, takeWhile } from 'rxjs';
+import { FloydWarshall } from './floyd-warshall';
 
 @Component({
   selector: 'app-root',
@@ -34,12 +36,14 @@ import { BehaviorSubject } from 'rxjs';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AppComponent {
-  @ViewChild('tileMapElement')
-  tileMapElement!: ElementRef<HTMLElement>;
-  @ViewChild('adjacencyMatrixCodeElement')
-  adjacencyMatrixCodeElement!: ElementRef<HTMLElement>;
+  @ViewChild('tileMapElement') tileMapElement!: ElementRef<HTMLElement>;
+  @ViewChild('adjacencyMatrixCodeElement') adjacencyMatrixCodeElement!: ElementRef<HTMLElement>;
+  @ViewChildren(MatTooltip) tooltips!: MatTooltip[];
 
-  private adjacencyMatrix!: number[][];
+  private isPaused = true;
+  private speed = 200;
+
+  adjacencyMatrix!: number[][];
   tiles!: Tile[];
   numberOfCols = 0;
   numberOfRows = 0;
@@ -52,30 +56,32 @@ export class AppComponent {
     return this.state.floydWarshall?.currentLine;
   }
 
-  constructor(private animationBuilder: AnimationBuilder) {}
+  get dist(): number[][] | undefined {
+    return this.state.floydWarshall?.dist;
+  }
+
+  get next(): (number | null)[][] | undefined {
+    return this.state.floydWarshall?.next;
+  }
+
+  get V(): number | undefined {
+    return this.state.floydWarshall?.V;
+  }
+
+  get u(): number | undefined {
+    return this.state.floydWarshall?.u;
+  }
+
+  get v(): number | undefined {
+    return this.state.floydWarshall?.v;
+  }
+
+  constructor(private animationBuilder: AnimationBuilder, private cdr: ChangeDetectorRef) {}
 
   ngOnInit() {
-    const tileMap = `#####################
-# #   #   #   #     #
-# # ### ### # # ### #
-#     #     #     # #
-# ### ### ####### ###
-# # #       #   #   #
-### # ####### # # ###
-# #   #   # # #     #
-# ### # # # ####### #
-#       #     #     #
-# # ### ### #########
-# # #   #     # # # #
-# # ### ##### # # # #
-# # #       #   # # #
-##### # ##### ### # #
-# # # #     #     # #
-# # # ####### # ### #
-# #     #     #     #
-# # # ######### #####
-#   #   #           #
-#####################`;
+    const tileMap = `####
+#  #
+####`;
 
     const rows: string[] = tileMap.split(/\r?\n/);
     this.numberOfRows = rows.length;
@@ -132,26 +138,25 @@ export class AppComponent {
     return adjacencyMatrix;
   }
 
+  ngAfterViewInit() {
+    for (const tooltip of this.tooltips) {
+      tooltip.disabled = true;
+    }
+  }
+
   stepForward() {
     this.history.push(this.state.clone());
 
-    switch (this.state.step) {
-      case 0: {
-        this.state.floydWarshall = new FloydWarshall(this.adjacencyMatrix);
-        this.state.step++;
-        break;
-      }
-      case 1: {
-        this.state.floydWarshall!.stepForward();
-        this.state.step++;
-        break;
-      }
-      case 2: {
-        this.state.floydWarshall!.stepForward();
-        this.state.step++;
-        break;
-      }
+    if (this.state.debugging) {
+      this.state.floydWarshall!.stepForward();
+      return;
     }
+
+    this.state.floydWarshall = new FloydWarshall(this.adjacencyMatrix);
+    for (const tooltip of this.tooltips) {
+      tooltip.disabled = false;
+    }
+    this.state.debugging = true;
 
     /* if (this.stepThree) {
       this.stepThree = false;
@@ -240,6 +245,37 @@ export class AppComponent {
     } */
   }
 
+  reset() {
+    this.state = this.history[0];
+    this.history = [];
+  }
+
+  play() {
+    this.isPaused = false;
+
+    const asyncLoop = () => {
+      setTimeout(() => {
+        this.stepForward();
+        this.cdr.markForCheck();
+        if (this.isPaused) return;
+        asyncLoop();
+      }, this.speed);
+    };
+    asyncLoop();
+  }
+
+  pause() {
+    this.isPaused = true;
+  }
+
+  speedUp() {
+    this.speed = Math.min(0, this.speed - 20);
+  }
+
+  slowDown() {
+    this.speed += 10;
+  }
+
   getDistElementBackgroundColor(value: number): string {
     // If value is infinity, return red
     if (value === Infinity) {
@@ -280,62 +316,13 @@ function resample(matrix: number[][], factor: number): number[][] {
   return resampled;
 }
 
-class FloydWarshall {
-  private _currentLine: number = 2;
-  get currentLine() {
-    return this._currentLine;
-  }
-
-  private _dist: number[][] | undefined;
-  get dist(): number[][] | undefined {
-    return this._dist;
-  }
-
-  private _next: (number | null)[][] | undefined;
-  public get next(): (number | null)[][] | undefined {
-    return this._next;
-  }
-
-  constructor(readonly adjacencyMatrix: number[][]) {}
-
-  lines: Map<number, () => void> = new Map([
-    [
-      2,
-      () => {
-        this._dist = [...this.adjacencyMatrix];
-      },
-    ],
-    [
-      3,
-      () => {
-        this._next = Array.from({ length: this.adjacencyMatrix.length }, () =>
-          Array(this.adjacencyMatrix.length).fill(null)
-        );
-      },
-    ],
-  ]);
-
-  stepForward() {
-    this.lines.get(this._currentLine)!();
-    this._currentLine++;
-  }
-
-  clone(): FloydWarshall {
-    const floydWarshall = new FloydWarshall(this.adjacencyMatrix);
-    floydWarshall._currentLine = this._currentLine;
-    floydWarshall._dist = this._dist ? [...this._dist] : undefined;
-    floydWarshall._next = this._next ? [...this._next] : undefined;
-    return floydWarshall;
-  }
-}
-
 class State {
-  step = 0;
+  debugging = false;
   floydWarshall?: FloydWarshall;
 
   clone(): State {
     const state = new State();
-    state.step = this.step;
+    state.debugging = this.debugging;
     state.floydWarshall = this.floydWarshall?.clone();
     return state;
   }
