@@ -7,7 +7,7 @@ import { BehaviorSubject } from 'rxjs';
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.css'],
   animations: [
-    trigger('distAnimation', [
+    /* trigger('distAnimation', [
       transition(':enter', [
         query(
           ':enter',
@@ -29,7 +29,7 @@ import { BehaviorSubject } from 'rxjs';
           { optional: true }
         ),
       ]),
-    ]),
+    ]), */
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -39,18 +39,18 @@ export class AppComponent {
   @ViewChild('adjacencyMatrixCodeElement')
   adjacencyMatrixCodeElement!: ElementRef<HTMLElement>;
 
+  private adjacencyMatrix!: number[][];
   tiles!: Tile[];
   numberOfCols = 0;
   numberOfRows = 0;
-  adjacencyMatrix!: number[][];
-  distForDisplay: number[][] = [];
+  //distForDisplay: number[][] = [];
 
-  /* Algo state */
-  dist: number[][] | undefined;
-  stepOne = new BehaviorSubject<boolean>(true);
-  stepTwo = new BehaviorSubject<boolean>(false);
-  stepThree = false;
-  stepFour = false;
+  history: State[] = [];
+  state = new State();
+
+  get currentLine(): number | undefined {
+    return this.state.floydWarshall?.currentLine;
+  }
 
   constructor(private animationBuilder: AnimationBuilder) {}
 
@@ -97,7 +97,9 @@ export class AppComponent {
     const numCols = rows[0].length;
 
     // Initialize the adjacency matrix with all zeros
-    const adjacencyMatrix = Array.from({ length: numRows * numCols }, () => Array(numRows * numCols).fill(0));
+    const adjacencyMatrix: number[][] = Array.from({ length: numRows * numCols }, () =>
+      Array(numRows * numCols).fill(0)
+    );
 
     // Iterate through the rows and columns of the map
     for (let i = 0; i < numRows; i++) {
@@ -131,7 +133,27 @@ export class AppComponent {
   }
 
   stepForward() {
-    if (this.stepThree) {
+    this.history.push(this.state.clone());
+
+    switch (this.state.step) {
+      case 0: {
+        this.state.floydWarshall = new FloydWarshall(this.adjacencyMatrix);
+        this.state.step++;
+        break;
+      }
+      case 1: {
+        this.state.floydWarshall!.stepForward();
+        this.state.step++;
+        break;
+      }
+      case 2: {
+        this.state.floydWarshall!.stepForward();
+        this.state.step++;
+        break;
+      }
+    }
+
+    /* if (this.stepThree) {
       this.stepThree = false;
       this.stepFour = true;
       this.dist = [...this.adjacencyMatrix];
@@ -167,11 +189,17 @@ export class AppComponent {
         this.stepOne.next(false);
         player.destroy();
       });
-    }
+    } */
   }
 
   stepBackward() {
-    if (this.stepFour) {
+    if (this.history.length === 0) {
+      return;
+    }
+
+    this.state = this.history.pop()!;
+
+    /* if (this.stepFour) {
       this.stepFour = false;
       this.stepThree = true;
       this.distForDisplay = [];
@@ -209,7 +237,7 @@ export class AppComponent {
         player.destroy();
       });
       return;
-    }
+    } */
   }
 
   getDistElementBackgroundColor(value: number): string {
@@ -250,4 +278,65 @@ function resample(matrix: number[][], factor: number): number[][] {
   }
 
   return resampled;
+}
+
+class FloydWarshall {
+  private _currentLine: number = 2;
+  get currentLine() {
+    return this._currentLine;
+  }
+
+  private _dist: number[][] | undefined;
+  get dist(): number[][] | undefined {
+    return this._dist;
+  }
+
+  private _next: (number | null)[][] | undefined;
+  public get next(): (number | null)[][] | undefined {
+    return this._next;
+  }
+
+  constructor(readonly adjacencyMatrix: number[][]) {}
+
+  lines: Map<number, () => void> = new Map([
+    [
+      2,
+      () => {
+        this._dist = [...this.adjacencyMatrix];
+      },
+    ],
+    [
+      3,
+      () => {
+        this._next = Array.from({ length: this.adjacencyMatrix.length }, () =>
+          Array(this.adjacencyMatrix.length).fill(null)
+        );
+      },
+    ],
+  ]);
+
+  stepForward() {
+    this.lines.get(this._currentLine)!();
+    this._currentLine++;
+  }
+
+  clone(): FloydWarshall {
+    const floydWarshall = new FloydWarshall(this.adjacencyMatrix);
+    floydWarshall._currentLine = this._currentLine;
+    floydWarshall._dist = this._dist ? [...this._dist] : undefined;
+    floydWarshall._next = this._next ? [...this._next] : undefined;
+    return floydWarshall;
+  }
+}
+
+class State {
+  step = 0;
+  floydWarshall?: FloydWarshall;
+
+  clone(): State {
+    const state = new State();
+    state.step = this.step;
+    state.floydWarshall = this.floydWarshall?.clone();
+    return state;
+  }
 }

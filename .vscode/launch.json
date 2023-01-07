@@ -3,8 +3,14 @@
   "version": "0.2.0",
   "configurations": [
     {
+      "name": "Attach to Angular",
+      "request": "launch",
+      "type": "chrome",
+      "url": "http://localhost:4200/"
+    },
+    {
       "name": "ng serve",
-      "type": "pwa-chrome",
+      "type": "chrome",
       "request": "launch",
       "preLaunchTask": "npm: start",
       "url": "http://localhost:4200/"

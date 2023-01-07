@@ -1,7 +1,7 @@
 <div class="container">
   <div class="left-panel">
     <div class="collections">
-      <div [@distAnimation]="distForDisplay.length" class="dist-matrix">
+      <!-- <div [@distAnimation]="distForDisplay.length" class="dist-matrix">
         <div [@distAnimation]="row.length" *ngFor="let row of distForDisplay" style="display: flex">
           <div
             *ngFor="let element of row"
@@ -11,7 +11,7 @@
             }"
           ></div>
         </div>
-      </div>
+      </div> -->
     </div>
 
     <div
@@ -32,10 +32,10 @@
   </div>
 
   <div class="right-panel">
-    <pre><code>function floydWarshall(<span [ngClass]="{'code-highlight': stepTwo | async}" #adjacencyMatrixCodeElement>adjacencyMatrix</span>):
-  <span [ngClass]="{'code-highlight': stepThree}">dist = copy of adjacencyMatrix</span>
-  <span [ngClass]="{'code-highlight': stepFour}">next = new matrix of size |V| x |V|</span>
-  for u from 0 to |V|:
+    <pre><code><span>function floydWarshall(<span #adjacencyMatrixCodeElement>adjacencyMatrix</span>):</span>
+  <span [appCodeLine]="2" [lineToHighlight]="currentLine">dist = copy of adjacencyMatrix</span>
+  <span [appCodeLine]="3" [lineToHighlight]="currentLine">next = new matrix of size |V| x |V|</span>
+  <span [appCodeLine]="4" [lineToHighlight]="currentLine">for u from 0 to |V|:</span>
     for v from 0 to |V|:
       if u == v:
         dist[v][v] = 0
