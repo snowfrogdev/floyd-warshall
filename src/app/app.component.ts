@@ -1,7 +1,24 @@
 import { animate, AnimationBuilder, query, stagger, style, transition, trigger } from '@angular/animations';
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, ViewChild, ViewChildren } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+  Component,
+  ElementRef,
+  ViewChild,
+  ViewChildren,
+} from '@angular/core';
 import { MatTooltip } from '@angular/material/tooltip';
-import { animationFrameScheduler, asapScheduler, asyncScheduler, BehaviorSubject, interval, Subject, Subscription, takeUntil, takeWhile } from 'rxjs';
+import {
+  animationFrameScheduler,
+  asapScheduler,
+  asyncScheduler,
+  BehaviorSubject,
+  interval,
+  Subject,
+  Subscription,
+  takeUntil,
+  takeWhile,
+} from 'rxjs';
 import { AdjacencyMatrixService } from './adjacency-matrix.service';
 import { FloydWarshall } from './floyd-warshall';
 
@@ -64,6 +81,8 @@ export class AppComponent {
   get j(): number | undefined {
     return this.state.floydWarshall?.j;
   }
+
+  private breakpoints = new Set<number>();
 
   constructor(
     private adjacencyMatrixService: AdjacencyMatrixService,
@@ -128,6 +147,11 @@ export class AppComponent {
     const asyncLoop = () => {
       setTimeout(() => {
         this.stepForward();
+
+        if (this.breakpoints.has(this.currentLine!)) {
+          this.pause();
+        }
+
         this.cdr.markForCheck();
         if (this.pauseRequested) {
           this.pauseRequested = false;
@@ -150,6 +174,14 @@ export class AppComponent {
 
   slowDown() {
     this.speed += 10;
+  }
+
+  handleDebuggerPoint(event: { line: number; isSet: boolean }) {
+    if (event.isSet) {
+      this.breakpoints.add(event.line);
+    } else {
+      this.breakpoints.delete(event.line);
+    }
   }
 
   getDistElementBackgroundColor(value: number): string {

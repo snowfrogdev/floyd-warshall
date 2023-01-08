@@ -1,0 +1,21 @@
+:host {
+  position: absolute;
+  left: -4.5rem;
+  top: -1px;
+  cursor: pointer;
+  width: 5rem;
+  height: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  opacity: 0;
+}
+
+.dot {
+  background-color: red;
+  border-radius: 50%;
+  height: 0.5rem;
+  width: 0.5rem;
+  margin-left: auto;
+  margin-right: 1rem;
+}
