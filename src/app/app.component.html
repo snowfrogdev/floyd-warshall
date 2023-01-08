@@ -41,7 +41,7 @@
   </div>
 
   <div class="right-panel">
-    <pre><code><span>function floydWarshall(<span #adjacencyMatrixCodeElement [matTooltip]="adjacencyMatrix | json">adjacencyMatrix</span>):</span>
+    <pre><code class="code"><span>function floydWarshall(<span #adjacencyMatrixCodeElement [matTooltip]="adjacencyMatrix | json">adjacencyMatrix</span>):</span>
   <span [appCodeLine]="2" [lineToHighlight]="currentLine"><span [matTooltip]="dist | json">dist</span> = copy of <span [matTooltip]="adjacencyMatrix | json">adjacencyMatrix</span></span>
   <span [appCodeLine]="3" [lineToHighlight]="currentLine"><span [matTooltip]="next | json">next</span> = new matrix of size <span [matTooltip]="V | json">|V|</span> x <span [matTooltip]="V | json">|V|</span></span>
   <span [appCodeLine]="4" [lineToHighlight]="currentLine">for <span [matTooltip]="u | json">u</span> from 0 to <span [matTooltip]="V | json">|V|</span> - 1:</span>

@@ -16,6 +16,7 @@ export class AppComponent {
   @ViewChild('adjacencyMatrixCodeElement') adjacencyMatrixCodeElement!: ElementRef<HTMLElement>;
   @ViewChildren(MatTooltip) tooltips!: MatTooltip[];
 
+  private pauseRequested = false;
   private isPaused = true;
   private speed = 200;
 
@@ -121,13 +122,18 @@ export class AppComponent {
   }
 
   play() {
+    if (!this.isPaused) return;
     this.isPaused = false;
 
     const asyncLoop = () => {
       setTimeout(() => {
         this.stepForward();
         this.cdr.markForCheck();
-        if (this.isPaused) return;
+        if (this.pauseRequested) {
+          this.pauseRequested = false;
+          this.isPaused = true;
+          return;
+        }
         asyncLoop();
       }, this.speed);
     };
@@ -135,7 +141,7 @@ export class AppComponent {
   }
 
   pause() {
-    this.isPaused = true;
+    this.pauseRequested = true;
   }
 
   speedUp() {

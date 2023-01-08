@@ -51,6 +51,10 @@
   height: 0.09rem;
 }
 
-.hidden {
-  visibility: hidden;
+.code {
+  font-family: 'Fira Code', monospace;
+  font-size: 0.75rem;
+  font-variant-ligatures: common-ligatures;
+  font-feature-settings: "calt" 1;
+  text-rendering: optimizeLegibility;
 }
