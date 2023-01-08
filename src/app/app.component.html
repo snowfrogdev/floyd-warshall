@@ -34,8 +34,11 @@
         <button (click)="stepForward()">Forward</button>
       </div>
       <div>
-        <button (click)="slowDown()">-</button>
-        <button (click)="speedUp()">+</button>
+        <mat-slider min="0" max="100" step="1" showTickMarks discrete [displayWith]="slidderLabel">
+          <input matSliderThumb [(ngModel)]="speed"/>
+        </mat-slider>
+        <!-- <button (click)="slowDown()">-</button>
+        <button (click)="speedUp()">+</button> -->
       </div>
     </div>
   </div>

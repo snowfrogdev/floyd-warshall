@@ -35,7 +35,7 @@ export class AppComponent {
 
   private pauseRequested = false;
   private isPaused = true;
-  private speed = 200;
+  speed = 100;
 
   adjacencyMatrix!: number[][];
   tiles!: Tile[];
@@ -112,6 +112,10 @@ export class AppComponent {
     }
   }
 
+  slidderLabel(value: number): string {
+    return `${value}%`;
+  }
+
   stepForward() {
     this.history.push(this.state.clone());
 
@@ -159,7 +163,7 @@ export class AppComponent {
           return;
         }
         asyncLoop();
-      }, this.speed);
+      }, 500 - (this.speed / 100) * 500);
     };
     asyncLoop();
   }
