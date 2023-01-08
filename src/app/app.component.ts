@@ -8,17 +8,6 @@ import {
   ViewChildren,
 } from '@angular/core';
 import { MatTooltip } from '@angular/material/tooltip';
-import {
-  animationFrameScheduler,
-  asapScheduler,
-  asyncScheduler,
-  BehaviorSubject,
-  interval,
-  Subject,
-  Subscription,
-  takeUntil,
-  takeWhile,
-} from 'rxjs';
 import { AdjacencyMatrixService } from './adjacency-matrix.service';
 import { FloydWarshall } from './floyd-warshall';
 
@@ -34,7 +23,7 @@ export class AppComponent {
   @ViewChildren(MatTooltip) tooltips!: MatTooltip[];
 
   private pauseRequested = false;
-  private isPaused = true;
+  isPaused = true;
   speed = 100;
 
   adjacencyMatrix!: number[][];
@@ -144,6 +133,15 @@ export class AppComponent {
     this.history = [];
   }
 
+  playOrPause() {
+    if (this.isPaused) {
+      this.play();
+      return;
+    }
+
+    this.pause();
+  }
+
   play() {
     if (!this.isPaused) return;
     this.isPaused = false;
@@ -170,14 +168,6 @@ export class AppComponent {
 
   pause() {
     this.pauseRequested = true;
-  }
-
-  speedUp() {
-    this.speed = Math.max(0, this.speed - 20);
-  }
-
-  slowDown() {
-    this.speed += 10;
   }
 
   handleDebuggerPoint(event: { line: number; isSet: boolean }) {

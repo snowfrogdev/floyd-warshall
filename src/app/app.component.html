@@ -22,24 +22,26 @@
         'grid-template-rows': 'repeat(' + numberOfRows + ', 1.25rem)'
       }"
     >
-      <div *ngFor="let tile of tiles" class="tile" [style.background-color]="tile.color"></div>
+      <div *ngFor="let tile of tiles; index as i" class="tile" [style.background-color]="tile.color">
+        <div *ngIf="u === i" style="background-color: blue; opacity: 0.5"></div>
+        <div *ngIf="v === i" style="background-color: red; opacity: 0.5"></div>
+      </div>
     </div>
 
-    <div class="controls">
-      <div>
-        <button (click)="stepBackward()">Backward</button>
-        <button (click)="reset()">Reset</button>
-        <button (click)="play()">Play</button>
-        <button (click)="pause()">Pause</button>
-        <button (click)="stepForward()">Forward</button>
-      </div>
-      <div>
-        <mat-slider min="0" max="100" step="1" showTickMarks discrete [displayWith]="slidderLabel">
-          <input matSliderThumb [(ngModel)]="speed"/>
-        </mat-slider>
-        <!-- <button (click)="slowDown()">-</button>
-        <button (click)="speedUp()">+</button> -->
-      </div>
+    <div class="controls" cdkDrag>
+      <div class="controls-handle" cdkDragHandle><mat-icon>drag_indicator</mat-icon></div>
+
+      <button mat-icon-button disableRipple="true" (click)="reset()"><mat-icon>replay</mat-icon></button>
+      <button mat-icon-button (click)="stepBackward()"><mat-icon>skip_previous</mat-icon></button>
+      <button mat-icon-button (click)="playOrPause()">
+        <mat-icon *ngIf="!isPaused">pause</mat-icon>
+        <mat-icon *ngIf="isPaused">play_arrow</mat-icon>
+      </button>
+      <button mat-icon-button (click)="stepForward()"><mat-icon>skip_next</mat-icon></button>
+
+      <mat-slider min="0" max="100" step="1" showTickMarks discrete [displayWith]="slidderLabel">
+        <input matSliderThumb [(ngModel)]="speed" />
+      </mat-slider>
     </div>
   </div>
 
