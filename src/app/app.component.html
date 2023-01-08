@@ -39,7 +39,7 @@
       </div>
     </div>
   </div>
-  {{ currentLine }}
+
   <div class="right-panel">
     <pre><code><span>function floydWarshall(<span #adjacencyMatrixCodeElement [matTooltip]="adjacencyMatrix | json">adjacencyMatrix</span>):</span>
   <span [appCodeLine]="2" [lineToHighlight]="currentLine"><span [matTooltip]="dist | json">dist</span> = copy of <span [matTooltip]="adjacencyMatrix | json">adjacencyMatrix</span></span>
@@ -47,22 +47,22 @@
   <span [appCodeLine]="4" [lineToHighlight]="currentLine">for <span [matTooltip]="u | json">u</span> from 0 to <span [matTooltip]="V | json">|V|</span> - 1:</span>
     <span [appCodeLine]="5" [lineToHighlight]="currentLine">for <span [matTooltip]="v | json">v</span> from 0 to <span [matTooltip]="V | json">|V|</span> - 1:</span>
       <span [appCodeLine]="6" [lineToHighlight]="currentLine">if <span [matTooltip]="u | json">u</span> == <span [matTooltip]="v | json">v</span>:</span>
-        <span [appCodeLine]="7" [lineToHighlight]="currentLine">dist[<span [matTooltip]="v | json">v</span>][<span [matTooltip]="v | json">v</span>] = 0</span>
-        <span [appCodeLine]="8" [lineToHighlight]="currentLine">next[<span [matTooltip]="v | json">v</span>][<span [matTooltip]="v | json">v</span>] = <span [matTooltip]="v | json">v</span></span>
+        <span [appCodeLine]="7" [lineToHighlight]="currentLine"><span [matTooltip]="dist | json">dist</span>[<span [matTooltip]="v | json">v</span>][<span [matTooltip]="v | json">v</span>] = 0</span>
+        <span [appCodeLine]="8" [lineToHighlight]="currentLine"><span [matTooltip]="next | json">next</span>[<span [matTooltip]="v | json">v</span>][<span [matTooltip]="v | json">v</span>] = <span [matTooltip]="v | json">v</span></span>
       <span [appCodeLine]="9" [lineToHighlight]="currentLine">else if adjacenyMatrix[<span [matTooltip]="u | json">u</span>][<span [matTooltip]="v | json">v</span>] != 0:</span>
-        <span [appCodeLine]="10" [lineToHighlight]="currentLine">next[<span [matTooltip]="u | json">u</span>][<span [matTooltip]="v | json">v</span>] = <span [matTooltip]="v | json">v</span></span>
+        <span [appCodeLine]="10" [lineToHighlight]="currentLine"><span [matTooltip]="next | json">next</span>[<span [matTooltip]="u | json">u</span>][<span [matTooltip]="v | json">v</span>] = <span [matTooltip]="v | json">v</span></span>
       else:
-        <span [appCodeLine]="12" [lineToHighlight]="currentLine">dist[<span [matTooltip]="u | json">u</span>][<span [matTooltip]="v | json">v</span>] = infinity</span>
-        <span [appCodeLine]="13" [lineToHighlight]="currentLine">next[<span [matTooltip]="u | json">u</span>][<span [matTooltip]="v | json">v</span>] = null</span>
+        <span [appCodeLine]="12" [lineToHighlight]="currentLine"><span [matTooltip]="dist | json">dist</span>[<span [matTooltip]="u | json">u</span>][<span [matTooltip]="v | json">v</span>] = infinity</span>
+        <span [appCodeLine]="13" [lineToHighlight]="currentLine"><span [matTooltip]="next | json">next</span>[<span [matTooltip]="u | json">u</span>][<span [matTooltip]="v | json">v</span>] = null</span>
 
-  <span [appCodeLine]="15" [lineToHighlight]="currentLine">for k from 0 to |V| - 1:</span>
-    for i from 0 to |V| - 1:
-      for j from 0 to |V| - 1:
-        if dist[i][j] > dist[i][k] + dist[k][j]:
-          dist[i][j] = dist[i][k] + dist[k][j]
-          next[i][j] = next[i][k]
+  <span [appCodeLine]="15" [lineToHighlight]="currentLine">for <span [matTooltip]="k | json">k</span> from 0 to <span [matTooltip]="V | json">|V|</span> - 1:</span>
+    <span [appCodeLine]="16" [lineToHighlight]="currentLine">for <span [matTooltip]="i | json">i</span> from 0 to <span [matTooltip]="V | json">|V|</span> - 1:</span>
+      <span [appCodeLine]="17" [lineToHighlight]="currentLine">for <span [matTooltip]="j | json">j</span> from 0 to <span [matTooltip]="V | json">|V|</span> - 1:</span>
+        <span [appCodeLine]="18" [lineToHighlight]="currentLine">if <span [matTooltip]="dist | json">dist</span>[<span [matTooltip]="i | json">i</span>][<span [matTooltip]="j | json">j</span>] > <span [matTooltip]="dist | json">dist</span>[<span [matTooltip]="i | json">i</span>][<span [matTooltip]="k | json">k</span>] + <span [matTooltip]="dist | json">dist</span>[<span [matTooltip]="k | json">k</span>][<span [matTooltip]="j | json">j</span>]:</span>
+          <span [appCodeLine]="19" [lineToHighlight]="currentLine"><span [matTooltip]="dist | json">dist</span>[<span [matTooltip]="i | json">i</span>][<span [matTooltip]="j | json">j</span>] = <span [matTooltip]="dist | json">dist</span>[<span [matTooltip]="i | json">i</span>][<span [matTooltip]="k | json">k</span>] + <span [matTooltip]="dist | json">dist</span>[<span [matTooltip]="k | json">k</span>][<span [matTooltip]="j | json">j</span>]</span>
+          <span [appCodeLine]="20" [lineToHighlight]="currentLine"><span [matTooltip]="next | json">next</span>[<span [matTooltip]="i | json">i</span>][<span [matTooltip]="j | json">j</span>] = <span [matTooltip]="next | json">next</span>[<span [matTooltip]="i | json">i</span>][<span [matTooltip]="k | json">k</span>]</span>
 
-return dist, next
+<span [appCodeLine]="22" [lineToHighlight]="currentLine">return <span [matTooltip]="dist | json">dist</span>, <span [matTooltip]="next | json">next</span></span>
 
 function reconstructPath(next, u, v):
   if next[u][v] == -1:

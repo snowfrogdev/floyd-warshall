@@ -4,6 +4,11 @@ export class FloydWarshall {
     return this._currentLine;
   }
 
+  private _isDone = false;
+  get isDone(): boolean {
+    return this._isDone;
+  }
+
   private _V = 0;
   public get V(): number {
     return this._V;
@@ -26,6 +31,21 @@ export class FloydWarshall {
   private _v: number | undefined;
   public get v(): number | undefined {
     return this._v;
+  }
+
+  private _k: number | undefined;
+  public get k(): number | undefined {
+    return this._k;
+  }
+
+  private _i: number | undefined;
+  public get i(): number | undefined {
+    return this._i;
+  }
+
+  private _j: number | undefined;
+  public get j(): number | undefined {
+    return this._j;
   }
 
   constructor(readonly adjacencyMatrix: number[][]) {
@@ -131,7 +151,68 @@ export class FloydWarshall {
     [
       15,
       () => {
-
+        this._k = this._k === undefined ? 0 : this._k + 1;
+        if (this._k! >= this._V) {
+          this._k = undefined;
+          this._currentLine = 21;
+          return;
+        }
+        this._currentLine++;
+      },
+    ],
+    [
+      16,
+      () => {
+        this._i = this._i === undefined ? 0 : this._i + 1;
+        if (this._i! >= this._V) {
+          this._i = undefined;
+          this._currentLine = 15;
+          return;
+        }
+        this._currentLine++;
+      },
+    ],
+    [
+      17,
+      () => {
+        this._j = this._j === undefined ? 0 : this._j + 1;
+        if (this._j! >= this._V) {
+          this._j = undefined;
+          this._currentLine = 16;
+          return;
+        }
+        this._currentLine++;
+      },
+    ],
+    [
+      18,
+      () => {
+        if (this._dist![this._i!][this._j!] > this._dist![this._i!][this._k!] + this._dist![this._k!][this._j!]) {
+          this._currentLine++;
+          return;
+        }
+        this._currentLine = 17;
+      },
+    ],
+    [
+      19,
+      () => {
+        this._dist![this._i!][this._j!] = this._dist![this._i!][this._k!] + this._dist![this._k!][this._j!];
+        this._currentLine++;
+      },
+    ],
+    [
+      20,
+      () => {
+        this._next![this._i!][this._j!] = this._next![this._i!][this._k!];
+        this._currentLine = 17;
+      },
+    ],
+    [
+      22,
+      () => {
+        this._isDone = true;
+        this._currentLine++;
       },
     ],
   ]);
@@ -143,11 +224,15 @@ export class FloydWarshall {
   clone(): FloydWarshall {
     const floydWarshall = new FloydWarshall(this.adjacencyMatrix);
     floydWarshall._currentLine = this._currentLine;
+    floydWarshall._isDone = this._isDone;
     floydWarshall._V = this._V;
     floydWarshall._dist = this._dist ? [...this._dist] : undefined;
     floydWarshall._next = this._next ? [...this._next] : undefined;
     floydWarshall._u = this._u;
     floydWarshall._v = this._v;
+    floydWarshall._k = this._k;
+    floydWarshall._i = this._i;
+    floydWarshall._j = this._j;
     return floydWarshall;
   }
 }

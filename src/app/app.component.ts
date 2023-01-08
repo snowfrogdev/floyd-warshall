@@ -2,37 +2,13 @@ import { animate, AnimationBuilder, query, stagger, style, transition, trigger }
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, ViewChild, ViewChildren } from '@angular/core';
 import { MatTooltip } from '@angular/material/tooltip';
 import { animationFrameScheduler, asapScheduler, asyncScheduler, BehaviorSubject, interval, Subject, Subscription, takeUntil, takeWhile } from 'rxjs';
+import { AdjacencyMatrixService } from './adjacency-matrix.service';
 import { FloydWarshall } from './floyd-warshall';
 
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.css'],
-  animations: [
-    /* trigger('distAnimation', [
-      transition(':enter', [
-        query(
-          ':enter',
-          [
-            style({ opacity: 0, transform: 'translateY(-100px)' }),
-            stagger(5, [animate('500ms cubic-bezier(0.35, 0, 0.25, 1)', style({ opacity: 1, transform: 'none' }))]),
-          ],
-          { optional: true }
-        ),
-      ]),
-      transition(':leave', [
-        query(
-          ':leave',
-          [
-            stagger(5, [
-              animate('500ms cubic-bezier(0.35, 0, 0.25, 1)', style({ opacity: 0, transform: 'translateY(-100px)' })),
-            ]),
-          ],
-          { optional: true }
-        ),
-      ]),
-    ]), */
-  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AppComponent {
@@ -76,12 +52,28 @@ export class AppComponent {
     return this.state.floydWarshall?.v;
   }
 
-  constructor(private animationBuilder: AnimationBuilder, private cdr: ChangeDetectorRef) {}
+  get k(): number | undefined {
+    return this.state.floydWarshall?.k;
+  }
+
+  get i(): number | undefined {
+    return this.state.floydWarshall?.i;
+  }
+
+  get j(): number | undefined {
+    return this.state.floydWarshall?.j;
+  }
+
+  constructor(
+    private adjacencyMatrixService: AdjacencyMatrixService,
+    private animationBuilder: AnimationBuilder,
+    private cdr: ChangeDetectorRef
+  ) {}
 
   ngOnInit() {
-    const tileMap = `####
-#  #
-####`;
+    const tileMap = `...
+...
+...`;
 
     const rows: string[] = tileMap.split(/\r?\n/);
     this.numberOfRows = rows.length;
@@ -91,51 +83,7 @@ export class AppComponent {
       .split('')
       .map((char) => (char === '#' ? new Tile('black') : new Tile('white')));
 
-    this.adjacencyMatrix = this.generateAdjacencyMatrix(tileMap);
-  }
-
-  generateAdjacencyMatrix(tileMap: string): number[][] {
-    // Split the tile map into an array of rows
-    const rows = tileMap.split(/\r?\n/);
-
-    // Get the number of rows and columns in the map
-    const numRows = rows.length;
-    const numCols = rows[0].length;
-
-    // Initialize the adjacency matrix with all zeros
-    const adjacencyMatrix: number[][] = Array.from({ length: numRows * numCols }, () =>
-      Array(numRows * numCols).fill(0)
-    );
-
-    // Iterate through the rows and columns of the map
-    for (let i = 0; i < numRows; i++) {
-      for (let j = 0; j < numCols; j++) {
-        // Calculate the index of the current tile in the adjacency matrix
-        const index = i * numCols + j;
-
-        // If the current tile is not a wall, add edges to its neighbors
-        if (rows[i][j] === ' ') {
-          // Add an edge to the tile to the left, if it exists and is not a wall
-          if (j > 0 && rows[i][j - 1] === ' ') {
-            adjacencyMatrix[index][index - 1] = 1;
-          }
-          // Add an edge to the tile to the right, if it exists and is not a wall
-          if (j < numCols - 1 && rows[i][j + 1] === ' ') {
-            adjacencyMatrix[index][index + 1] = 1;
-          }
-          // Add an edge to the tile above, if it exists and is not a wall
-          if (i > 0 && rows[i - 1][j] === ' ') {
-            adjacencyMatrix[index][index - numCols] = 1;
-          }
-          // Add an edge to the tile below, if it exists and is not a wall
-          if (i < numRows - 1 && rows[i + 1][j] === ' ') {
-            adjacencyMatrix[index][index + numCols] = 1;
-          }
-        }
-      }
-    }
-
-    return adjacencyMatrix;
+    this.adjacencyMatrix = this.adjacencyMatrixService.generateAdjacencyMatrix(tileMap);
   }
 
   ngAfterViewInit() {
@@ -157,44 +105,6 @@ export class AppComponent {
       tooltip.disabled = false;
     }
     this.state.debugging = true;
-
-    /* if (this.stepThree) {
-      this.stepThree = false;
-      this.stepFour = true;
-      this.dist = [...this.adjacencyMatrix];
-      this.distForDisplay = resample(this.dist, 10);
-      return;
-    }
-
-    if (this.stepTwo.value) {
-      this.stepThree = true;
-      this.stepTwo.next(false);
-      return;
-    }
-
-    if (this.stepOne.value) {
-      const tileMapElement = this.tileMapElement.nativeElement;
-      const codeElement = this.adjacencyMatrixCodeElement.nativeElement;
-      const mapOffsetLeft = tileMapElement.offsetLeft + tileMapElement.offsetWidth / 2;
-      const mapOffsetTop = tileMapElement.offsetTop + tileMapElement.offsetHeight / 2;
-      const codeOffsetLeft = codeElement.offsetLeft + codeElement.offsetWidth / 2;
-      const codeOffsetTop = codeElement.offsetTop + codeElement.offsetHeight / 2;
-      const animation = this.animationBuilder.build([
-        animate(
-          '500ms cubic-bezier(.3,.8,.26,.94)',
-          style({
-            transform: `translate(${codeOffsetLeft - mapOffsetLeft}px, ${codeOffsetTop - mapOffsetTop}px) scale(0)`,
-          })
-        ),
-      ]);
-      const player = animation.create(this.tileMapElement.nativeElement);
-      player.play();
-      player.onDone(() => {
-        this.stepTwo.next(true);
-        this.stepOne.next(false);
-        player.destroy();
-      });
-    } */
   }
 
   stepBackward() {
@@ -203,46 +113,6 @@ export class AppComponent {
     }
 
     this.state = this.history.pop()!;
-
-    /* if (this.stepFour) {
-      this.stepFour = false;
-      this.stepThree = true;
-      this.distForDisplay = [];
-      this.dist = [];
-      return;
-    }
-    if (this.stepThree) {
-      this.stepThree = false;
-      this.stepTwo.next(true);
-      return;
-    }
-    if (this.stepTwo.value) {
-      this.stepTwo.next(false);
-      this.stepOne.next(true);
-      const tileMapElement = this.tileMapElement.nativeElement;
-      const codeElement = this.adjacencyMatrixCodeElement.nativeElement;
-      const mapOffsetLeft = tileMapElement.offsetLeft + tileMapElement.offsetWidth / 2;
-      const mapOffsetTop = tileMapElement.offsetTop + tileMapElement.offsetHeight / 2;
-      const codeOffsetLeft = codeElement.offsetLeft + codeElement.offsetWidth / 2;
-      const codeOffsetTop = codeElement.offsetTop + codeElement.offsetHeight / 2;
-      const animation = this.animationBuilder.build([
-        style({
-          transform: `translate(${codeOffsetLeft - mapOffsetLeft}px, ${codeOffsetTop - mapOffsetTop}px) scale(0)`,
-        }),
-        animate(
-          '500ms cubic-bezier(.74,.06,.7,.2)',
-          style({
-            transform: `translate(0, 0) scale(1)`,
-          })
-        ),
-      ]);
-      const player = animation.create(this.tileMapElement.nativeElement);
-      player.play();
-      player.onDone(() => {
-        player.destroy();
-      });
-      return;
-    } */
   }
 
   reset() {
@@ -269,7 +139,7 @@ export class AppComponent {
   }
 
   speedUp() {
-    this.speed = Math.min(0, this.speed - 20);
+    this.speed = Math.max(0, this.speed - 20);
   }
 
   slowDown() {
