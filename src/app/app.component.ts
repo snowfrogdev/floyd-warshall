@@ -30,8 +30,7 @@ import { FloydWarshall } from './floyd-warshall';
           ],
           { optional: true }
         ),
-      ]),
-      transition(':leave', [
+      ]),      transition(':leave', [
         query(
           ':leave',
           [
@@ -46,7 +45,6 @@ import { FloydWarshall } from './floyd-warshall';
   ],
 })
 export class AppComponent implements OnInit, AfterViewInit {
-  @ViewChild('tileMapElement') tileMapElement!: ElementRef<HTMLElement>;
   @ViewChild('adjacencyMatrixCodeElement') adjacencyMatrixCodeElement!: ElementRef<HTMLElement>;
   @ViewChildren(MatTooltip) tooltips!: MatTooltip[];
 

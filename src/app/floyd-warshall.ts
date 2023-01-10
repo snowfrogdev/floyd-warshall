@@ -46,7 +46,7 @@ export class FloydWarshall {
     return this._j;
   }
 
-  constructor(readonly adjacencyMatrix: number[][]) {
+  constructor(readonly adjacencyMatrix: readonly (readonly number[])[]) {
     this._V = adjacencyMatrix.length;
   }
 
@@ -54,7 +54,7 @@ export class FloydWarshall {
     [
       2,
       () => {
-        this._dist.next([...this.adjacencyMatrix]);
+        this._dist.next(this.cloneMatrix(this.adjacencyMatrix));
         this._currentLine++;
       },
     ],
@@ -237,7 +237,7 @@ export class FloydWarshall {
     floydWarshall._isDone = this._isDone;
     floydWarshall._V = this._V;
     floydWarshall._dist.next(this._dist.value ? this.cloneMatrix(this._dist.value) : undefined);
-    floydWarshall._next.next(this._next.value ? this.cloneMatrix(this._next.value) : undefined)
+    floydWarshall._next.next(this._next.value ? this.cloneMatrix(this._next.value) : undefined);
     floydWarshall._u = this._u;
     floydWarshall._v = this._v;
     floydWarshall._k = this._k;
@@ -246,7 +246,7 @@ export class FloydWarshall {
     return floydWarshall;
   }
 
-  private cloneMatrix<T>(matrix: T[][]): T[][] {
+  private cloneMatrix<T>(matrix: readonly (readonly T[])[]): T[][] {
     return matrix.map((row) => [...row]);
   }
 }
