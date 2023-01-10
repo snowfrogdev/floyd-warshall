@@ -32,9 +32,12 @@
         'grid-template-rows': 'repeat(' + numberOfRows + ', 1.25rem)'
       }"
     >
-      <div *ngFor="let tile of tiles; index as i" class="tile" [style.background-color]="tile.color">
-        <div *ngIf="u === i" style="background-color: blue; opacity: 0.5"></div>
-        <div *ngIf="v === i" style="background-color: red; opacity: 0.5"></div>
+      <div *ngFor="let tile of tiles; index as index" class="tile" [style.background-color]="tile.color">
+        <div *ngIf="u === index" style="background-color: blue; opacity: 0.5"></div>
+        <div *ngIf="v === index" style="background-color: red; opacity: 0.5"></div>
+        <div *ngIf="k === index" style="background-color: blue; opacity: 0.33"></div>
+        <div *ngIf="i === index" style="background-color: green; opacity: 0.33"></div>
+        <div *ngIf="j === index" style="background-color: red; opacity: 0.33"></div>
       </div>
     </div>
 
@@ -42,11 +45,11 @@
       <div class="controls-handle" cdkDragHandle><mat-icon>drag_indicator</mat-icon></div>
       <button mat-icon-button disableRipple="true" (click)="reset()"><mat-icon>replay</mat-icon></button>
       <button mat-icon-button (click)="stepBackward()"><mat-icon>skip_previous</mat-icon></button>
-      <button mat-icon-button (click)="playOrPause()">
+      <button mat-icon-button (click)="playOrPause()" [disabled]="isDone | async">
         <mat-icon *ngIf="!isPaused">pause</mat-icon>
         <mat-icon *ngIf="isPaused">play_arrow</mat-icon>
       </button>
-      <button mat-icon-button (click)="stepForward()"><mat-icon>skip_next</mat-icon></button>
+      <button mat-icon-button (click)="stepForward()" [disabled]="isDone | async"><mat-icon>skip_next</mat-icon></button>
       <button mat-icon-button (click)="showSpeedControl = !showSpeedControl">
         <mat-icon>speed</mat-icon>
       </button>

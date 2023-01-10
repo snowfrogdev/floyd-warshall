@@ -58,7 +58,7 @@ export class AppComponent implements OnInit, AfterViewInit {
   numberOfRows = 0;
 
   showSpeedControl = false;
-  
+
   get distForDisplay(): Observable<number[][] | undefined> {
     return this.dist;
   }
@@ -226,7 +226,7 @@ export class AppComponent implements OnInit, AfterViewInit {
       return 'red';
     }
 
-    const ratio = (2 * (value - 0)) / (this.numberOfCols * this.numberOfRows - 0);
+    const ratio = value / (this.numberOfCols * this.numberOfRows);
     let b = 255;
     let g = Math.max(0, Math.ceil(255 * (1 - ratio)));
     let r = Math.max(0, Math.ceil(255 * (1 - ratio)));
@@ -239,10 +239,10 @@ export class AppComponent implements OnInit, AfterViewInit {
       return 'red';
     }
 
-    const ratio = (2 * (value - 0)) / (this.numberOfCols * this.numberOfRows - 0);
-    let b = Math.max(0, Math.ceil(255 * (1 - ratio)));
-    let g = 255;
-    let r = Math.max(0, Math.ceil(255 * (1 - ratio)));
+    const ratio = value / (this.numberOfCols * this.numberOfRows);
+    let b = Math.max(0, Math.ceil(255 * ratio));
+    let g = Math.max(0, Math.ceil(255 * (1 - ratio)));
+    let r = 0;
     return `rgb(${r}, ${g}, ${b})`;
   }
 }
