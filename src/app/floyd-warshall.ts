@@ -1,3 +1,5 @@
+import { BehaviorSubject, Observable } from 'rxjs';
+
 export class FloydWarshall {
   private _currentLine: number = 2;
   get currentLine() {
@@ -13,15 +15,11 @@ export class FloydWarshall {
   public get V(): number {
     return this._V;
   }
-  private _dist: number[][] | undefined;
-  get dist(): number[][] | undefined {
-    return this._dist;
-  }
+  private _dist = new BehaviorSubject<number[][] | undefined>(undefined);
+  readonly dist: Observable<number[][] | undefined> = this._dist.asObservable();
 
-  private _next: (number | null)[][] | undefined;
-  public get next(): (number | null)[][] | undefined {
-    return this._next;
-  }
+  private _next = new BehaviorSubject<(number | null)[][] | undefined>(undefined);
+  readonly next: Observable<(number | null)[][] | undefined> = this._dist.asObservable();
 
   private _u: number | undefined;
   public get u(): number | undefined {
@@ -56,15 +54,15 @@ export class FloydWarshall {
     [
       2,
       () => {
-        this._dist = [...this.adjacencyMatrix];
+        this._dist.next([...this.adjacencyMatrix]);
         this._currentLine++;
       },
     ],
     [
       3,
       () => {
-        this._next = Array.from({ length: this.adjacencyMatrix.length }, () =>
-          Array(this.adjacencyMatrix.length).fill(null)
+        this._next.next(
+          Array.from({ length: this.adjacencyMatrix.length }, () => Array(this.adjacencyMatrix.length).fill(null))
         );
         this._currentLine++;
       },
@@ -106,14 +104,16 @@ export class FloydWarshall {
     [
       7,
       () => {
-        this._dist![this._v!][this._v!] = 0;
+        this._dist.value![this._v!][this._v!] = 0;
+        this._dist.next(this._dist.value!);
         this._currentLine++;
       },
     ],
     [
       8,
       () => {
-        this._next![this._v!][this._v!] = this._v!;
+        this._next.value![this._v!][this._v!] = this._v!;
+        this._next.next(this._next.value!);
         this._currentLine = 5;
       },
     ],
@@ -130,21 +130,24 @@ export class FloydWarshall {
     [
       10,
       () => {
-        this._next![this._u!][this._v!] = this._v!;
+        this._next.value![this._u!][this._v!] = this._v!;
+        this._next.next(this._next.value!);
         this._currentLine = 5;
       },
     ],
     [
       12,
       () => {
-        this._dist![this._u!][this._v!] = Infinity;
+        this._dist.value![this._u!][this._v!] = Infinity;
+        this._dist.next(this._dist.value!);
         this._currentLine++;
       },
     ],
     [
       13,
       () => {
-        this._next![this._u!][this._v!] = null;
+        this._next.value![this._u!][this._v!] = null;
+        this._next.next(this._next.value!);
         this._currentLine = 5;
       },
     ],
@@ -187,7 +190,10 @@ export class FloydWarshall {
     [
       18,
       () => {
-        if (this._dist![this._i!][this._j!] > this._dist![this._i!][this._k!] + this._dist![this._k!][this._j!]) {
+        if (
+          this._dist.value![this._i!][this._j!] >
+          this._dist.value![this._i!][this._k!] + this._dist.value![this._k!][this._j!]
+        ) {
           this._currentLine++;
           return;
         }
@@ -197,14 +203,16 @@ export class FloydWarshall {
     [
       19,
       () => {
-        this._dist![this._i!][this._j!] = this._dist![this._i!][this._k!] + this._dist![this._k!][this._j!];
+        this._dist.value![this._i!][this._j!] =
+          this._dist.value![this._i!][this._k!] + this._dist.value![this._k!][this._j!];
         this._currentLine++;
       },
     ],
     [
       20,
       () => {
-        this._next![this._i!][this._j!] = this._next![this._i!][this._k!];
+        this._next.value![this._i!][this._j!] = this._next.value![this._i!][this._k!];
+        this._next.next(this._next.value!);
         this._currentLine = 17;
       },
     ],
@@ -226,8 +234,8 @@ export class FloydWarshall {
     floydWarshall._currentLine = this._currentLine;
     floydWarshall._isDone = this._isDone;
     floydWarshall._V = this._V;
-    floydWarshall._dist = this._dist ? [...this._dist] : undefined;
-    floydWarshall._next = this._next ? [...this._next] : undefined;
+    floydWarshall._dist.next(this._dist.value ? [...this._dist.value] : undefined);
+    floydWarshall._next.next(this._next.value ? [...this._next.value] : undefined)
     floydWarshall._u = this._u;
     floydWarshall._v = this._v;
     floydWarshall._k = this._k;

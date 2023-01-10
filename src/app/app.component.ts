@@ -1,13 +1,16 @@
 import { animate, AnimationBuilder, query, stagger, style, transition, trigger } from '@angular/animations';
 import {
+  AfterViewInit,
   ChangeDetectionStrategy,
   ChangeDetectorRef,
   Component,
   ElementRef,
+  OnInit,
   ViewChild,
   ViewChildren,
 } from '@angular/core';
 import { MatTooltip } from '@angular/material/tooltip';
+import { Observable } from 'rxjs';
 import { AdjacencyMatrixService } from './adjacency-matrix.service';
 import { FloydWarshall } from './floyd-warshall';
 
@@ -16,8 +19,33 @@ import { FloydWarshall } from './floyd-warshall';
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
+  animations: [
+    trigger('collectionAnimation', [
+      transition(':enter', [
+        query(
+          ':enter',
+          [
+            style({ opacity: 0, transform: 'translateY(-100px)' }),
+            stagger(5, [animate('500ms cubic-bezier(0.35, 0, 0.25, 1)', style({ opacity: 1, transform: 'none' }))]),
+          ],
+          { optional: true }
+        ),
+      ]),
+      transition(':leave', [
+        query(
+          ':leave',
+          [
+            stagger(5, [
+              animate('500ms cubic-bezier(0.35, 0, 0.25, 1)', style({ opacity: 0, transform: 'translateY(-100px)' })),
+            ]),
+          ],
+          { optional: true }
+        ),
+      ]),
+    ]),
+  ],
 })
-export class AppComponent {
+export class AppComponent implements OnInit, AfterViewInit {
   @ViewChild('tileMapElement') tileMapElement!: ElementRef<HTMLElement>;
   @ViewChild('adjacencyMatrixCodeElement') adjacencyMatrixCodeElement!: ElementRef<HTMLElement>;
   @ViewChildren(MatTooltip) tooltips!: MatTooltip[];
@@ -30,21 +58,28 @@ export class AppComponent {
   tiles!: Tile[];
   numberOfCols = 0;
   numberOfRows = 0;
-  //distForDisplay: number[][] = [];
+  get distForDisplay(): Observable<number[][] | undefined> {
+    return this.dist;
+  }
+
+  get nextForDisplay(): Observable<(number | null)[][] | undefined> {
+    return this.next;
+  }
 
   history: State[] = [];
-  state = new State();
+  state!: State;
 
   get currentLine(): number | undefined {
-    return this.state.floydWarshall?.currentLine;
+    if (!this.state.debugging) return;
+    return this.state.floydWarshall.currentLine;
   }
 
-  get dist(): number[][] | undefined {
-    return this.state.floydWarshall?.dist;
+  get dist(): Observable<number[][] | undefined> {
+    return this.state.floydWarshall.dist;
   }
 
-  get next(): (number | null)[][] | undefined {
-    return this.state.floydWarshall?.next;
+  get next(): Observable<(number | null)[][] | undefined> {
+    return this.state.floydWarshall.next;
   }
 
   get V(): number | undefined {
@@ -73,11 +108,7 @@ export class AppComponent {
 
   private breakpoints = new Set<number>();
 
-  constructor(
-    private adjacencyMatrixService: AdjacencyMatrixService,
-    private animationBuilder: AnimationBuilder,
-    private cdr: ChangeDetectorRef
-  ) {}
+  constructor(private adjacencyMatrixService: AdjacencyMatrixService, private cdr: ChangeDetectorRef) {}
 
   ngOnInit() {
     const tileMap = `...
@@ -93,6 +124,7 @@ export class AppComponent {
       .map((char) => (char === '#' ? new Tile('black') : new Tile('white')));
 
     this.adjacencyMatrix = this.adjacencyMatrixService.generateAdjacencyMatrix(tileMap);
+    this.state = new State(new FloydWarshall(this.adjacencyMatrix));
   }
 
   ngAfterViewInit() {
@@ -113,7 +145,6 @@ export class AppComponent {
       return;
     }
 
-    this.state.floydWarshall = new FloydWarshall(this.adjacencyMatrix);
     for (const tooltip of this.tooltips) {
       tooltip.disabled = false;
     }
@@ -220,12 +251,11 @@ function resample(matrix: number[][], factor: number): number[][] {
 
 class State {
   debugging = false;
-  floydWarshall?: FloydWarshall;
+  constructor(public floydWarshall: FloydWarshall) {}
 
   clone(): State {
-    const state = new State();
+    const state = new State(this.floydWarshall.clone());
     state.debugging = this.debugging;
-    state.floydWarshall = this.floydWarshall?.clone();
     return state;
   }
 }

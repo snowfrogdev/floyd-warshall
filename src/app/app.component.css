@@ -39,8 +39,8 @@
 }
 
 .collections {
+  display: flex;
   margin: 0.5rem;
-  height: 4rem;
 }
 
 .controls {
@@ -74,14 +74,30 @@
   cursor: move;
 }
 
+.speed-slider {
+  margin-left: 1rem;
+}
+
 .dist-matrix {
   display: flex;
   flex-direction: column;
 }
 
 .dist-element {
-  width: 0.09rem;
-  height: 0.09rem;
+  width: 1rem;
+  height: 1rem;
+  border: 1px solid black;
+}
+
+.next-matrix {
+  display: flex;
+  flex-direction: column;
+}
+
+.next-element {
+  width: 1rem;
+  height: 1rem;
+  border: 1px solid black;
 }
 
 .code {
