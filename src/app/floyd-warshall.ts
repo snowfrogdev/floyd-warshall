@@ -6,10 +6,8 @@ export class FloydWarshall {
     return this._currentLine;
   }
 
-  private _isDone = false;
-  get isDone(): boolean {
-    return this._isDone;
-  }
+  private _isDone = new BehaviorSubject<boolean>(false);
+  readonly isDone: Observable<boolean> = this._isDone.asObservable();
 
   private _V = 0;
   public get V(): number {
@@ -219,14 +217,14 @@ export class FloydWarshall {
     [
       22,
       () => {
-        this._isDone = true;
+        this._isDone.next(true);
         this._currentLine++;
       },
     ],
   ]);
 
   stepForward() {
-    if (!this.isDone) {
+    if (!this._isDone.value) {
       this.lines.get(this._currentLine)!();
     }
   }
@@ -234,7 +232,7 @@ export class FloydWarshall {
   clone(): FloydWarshall {
     const floydWarshall = new FloydWarshall(this.adjacencyMatrix);
     floydWarshall._currentLine = this._currentLine;
-    floydWarshall._isDone = this._isDone;
+    floydWarshall._isDone.next(this._isDone.value);
     floydWarshall._V = this._V;
     floydWarshall._dist.next(this._dist.value ? this.cloneMatrix(this._dist.value) : undefined);
     floydWarshall._next.next(this._next.value ? this.cloneMatrix(this._next.value) : undefined);

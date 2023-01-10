@@ -47,7 +47,10 @@
         <mat-icon *ngIf="isPaused">play_arrow</mat-icon>
       </button>
       <button mat-icon-button (click)="stepForward()"><mat-icon>skip_next</mat-icon></button>
-      <div class="speed-slider">
+      <button mat-icon-button (click)="showSpeedControl = !showSpeedControl">
+        <mat-icon>speed</mat-icon>
+      </button>
+      <div *ngIf="showSpeedControl" class="speed-slider">
         <mat-slider min="0" max="100" step="1" showTickMarks discrete [displayWith]="slidderLabel">
           <input matSliderThumb [(ngModel)]="speed" />
         </mat-slider>

@@ -10,7 +10,7 @@ import {
   ViewChildren,
 } from '@angular/core';
 import { MatTooltip } from '@angular/material/tooltip';
-import { Observable } from 'rxjs';
+import { Observable, tap } from 'rxjs';
 import { AdjacencyMatrixService } from './adjacency-matrix.service';
 import { FloydWarshall } from './floyd-warshall';
 
@@ -56,6 +56,9 @@ export class AppComponent implements OnInit, AfterViewInit {
   tiles!: Tile[];
   numberOfCols = 0;
   numberOfRows = 0;
+
+  showSpeedControl = false;
+  
   get distForDisplay(): Observable<number[][] | undefined> {
     return this.dist;
   }
@@ -104,6 +107,10 @@ export class AppComponent implements OnInit, AfterViewInit {
     return this.state.floydWarshall?.j;
   }
 
+  get isDone(): Observable<boolean> {
+    return this.state.floydWarshall.isDone;
+  }
+
   private breakpoints = new Set<number>();
 
   constructor(private adjacencyMatrixService: AdjacencyMatrixService, private cdr: ChangeDetectorRef) {}
@@ -123,6 +130,12 @@ export class AppComponent implements OnInit, AfterViewInit {
 
     this.adjacencyMatrix = this.adjacencyMatrixService.generateAdjacencyMatrix(tileMap);
     this.state = new State(new FloydWarshall(this.adjacencyMatrix));
+
+    this.isDone.subscribe((isDone) => {
+      if (isDone) {
+        this.pause();
+      }
+    });
   }
 
   ngAfterViewInit() {
