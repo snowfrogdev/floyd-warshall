@@ -19,7 +19,7 @@ export class FloydWarshall {
   readonly dist: Observable<number[][] | undefined> = this._dist.asObservable();
 
   private _next = new BehaviorSubject<(number | null)[][] | undefined>(undefined);
-  readonly next: Observable<(number | null)[][] | undefined> = this._dist.asObservable();
+  readonly next: Observable<(number | null)[][] | undefined> = this._next.asObservable();
 
   private _u: number | undefined;
   public get u(): number | undefined {
@@ -157,7 +157,7 @@ export class FloydWarshall {
         this._k = this._k === undefined ? 0 : this._k + 1;
         if (this._k! >= this._V) {
           this._k = undefined;
-          this._currentLine = 21;
+          this._currentLine = 22;
           return;
         }
         this._currentLine++;
@@ -226,7 +226,9 @@ export class FloydWarshall {
   ]);
 
   stepForward() {
-    this.lines.get(this._currentLine)!();
+    if (!this.isDone) {
+      this.lines.get(this._currentLine)!();
+    }
   }
 
   clone(): FloydWarshall {
@@ -234,13 +236,17 @@ export class FloydWarshall {
     floydWarshall._currentLine = this._currentLine;
     floydWarshall._isDone = this._isDone;
     floydWarshall._V = this._V;
-    floydWarshall._dist.next(this._dist.value ? [...this._dist.value] : undefined);
-    floydWarshall._next.next(this._next.value ? [...this._next.value] : undefined)
+    floydWarshall._dist.next(this._dist.value ? this.cloneMatrix(this._dist.value) : undefined);
+    floydWarshall._next.next(this._next.value ? this.cloneMatrix(this._next.value) : undefined)
     floydWarshall._u = this._u;
     floydWarshall._v = this._v;
     floydWarshall._k = this._k;
     floydWarshall._i = this._i;
     floydWarshall._j = this._j;
     return floydWarshall;
+  }
+
+  private cloneMatrix<T>(matrix: T[][]): T[][] {
+    return matrix.map((row) => [...row]);
   }
 }

@@ -12,13 +12,13 @@
           ></div>
         </div>
       </div>
-      <div [@collectionAnimation]="(next | async)?.length" class="next-matrix">
+      <div [@collectionAnimation]="(nextForDisplay | async)?.length" class="next-matrix">
         <div [@collectionAnimation]="row.length" *ngFor="let row of next | async" style="display: flex">
           <div
             *ngFor="let element of row"
             class="next-element"
             [ngStyle]="{
-              'background-color': 'green'
+              'background-color': getNextElementBackgroundColor(element)
             }"
           ></div>
         </div>

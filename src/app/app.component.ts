@@ -21,7 +21,7 @@ import { FloydWarshall } from './floyd-warshall';
   changeDetection: ChangeDetectionStrategy.OnPush,
   animations: [
     trigger('collectionAnimation', [
-      transition(':enter', [
+      /* transition(':enter', [
         query(
           ':enter',
           [
@@ -41,7 +41,7 @@ import { FloydWarshall } from './floyd-warshall';
           ],
           { optional: true }
         ),
-      ]),
+      ]), */
     ]),
   ],
 })
@@ -218,6 +218,19 @@ export class AppComponent implements OnInit, AfterViewInit {
     const ratio = (2 * (value - 0)) / (this.numberOfCols * this.numberOfRows - 0);
     let b = 255;
     let g = Math.max(0, Math.ceil(255 * (1 - ratio)));
+    let r = Math.max(0, Math.ceil(255 * (1 - ratio)));
+    return `rgb(${r}, ${g}, ${b})`;
+  }
+
+  getNextElementBackgroundColor(value: number | null): string {
+    // If value is null, return red
+    if (value === null) {
+      return 'red';
+    }
+
+    const ratio = (2 * (value - 0)) / (this.numberOfCols * this.numberOfRows - 0);
+    let b = Math.max(0, Math.ceil(255 * (1 - ratio)));
+    let g = 255;
     let r = Math.max(0, Math.ceil(255 * (1 - ratio)));
     return `rgb(${r}, ${g}, ${b})`;
   }
