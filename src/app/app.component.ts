@@ -59,6 +59,8 @@ export class AppComponent implements OnInit, AfterViewInit {
 
   showSpeedControl = false;
 
+  handleActive = false;
+
   get distForDisplay(): Observable<number[][] | undefined> {
     return this.dist;
   }
