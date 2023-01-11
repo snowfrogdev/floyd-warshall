@@ -171,8 +171,11 @@ export class AppComponent implements OnInit, AfterViewInit {
   }
 
   reset() {
-    this.state = this.history[0];
-    this.history = [];
+    if (this.history.length > 0) {
+      this.state = this.history[0];
+      this.history = [];
+      this.pause();
+    }
   }
 
   playOrPause() {

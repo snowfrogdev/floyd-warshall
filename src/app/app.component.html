@@ -43,7 +43,7 @@
 
     <div class="controls" cdkDrag>
       <div class="controls-handle" cdkDragHandle><mat-icon>drag_indicator</mat-icon></div>
-      <button mat-icon-button disableRipple="true" (click)="reset()"><mat-icon>replay</mat-icon></button>
+      <button mat-icon-button [disabled]="history.length === 0" (click)="reset()"><mat-icon>replay</mat-icon></button>
       <button mat-icon-button (click)="stepBackward()"><mat-icon>skip_previous</mat-icon></button>
       <button mat-icon-button (click)="playOrPause()" [disabled]="isDone | async">
         <mat-icon *ngIf="!isPaused">pause</mat-icon>
