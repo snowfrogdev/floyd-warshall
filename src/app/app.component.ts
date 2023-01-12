@@ -12,7 +12,9 @@ import {
 import { MatTooltip } from '@angular/material/tooltip';
 import { Observable, tap } from 'rxjs';
 import { AdjacencyMatrixService } from './adjacency-matrix.service';
+import { ControlsEvent, ControlsState } from './controls/controls.component';
 import { FloydWarshall } from './floyd-warshall';
+import { StateMachineService } from './state-machine.service';
 
 @Component({
   selector: 'app-root',
@@ -45,21 +47,14 @@ import { FloydWarshall } from './floyd-warshall';
   ],
 })
 export class AppComponent implements OnInit, AfterViewInit {
-  @ViewChild('adjacencyMatrixCodeElement') adjacencyMatrixCodeElement!: ElementRef<HTMLElement>;
   @ViewChildren(MatTooltip) tooltips!: MatTooltip[];
 
-  private pauseRequested = false;
-  isPaused = true;
   speed = 100;
 
   adjacencyMatrix!: number[][];
   tiles!: Tile[];
   numberOfCols = 0;
   numberOfRows = 0;
-
-  showSpeedControl = false;
-
-  handleActive = false;
 
   get distForDisplay(): Observable<number[][] | undefined> {
     return this.dist;
@@ -71,9 +66,10 @@ export class AppComponent implements OnInit, AfterViewInit {
 
   history: State[] = [];
   state!: State;
+  controlsState = new ControlsState(true, true, false, false, false);
 
-  get currentLine(): number | undefined {
-    if (!this.state.debugging) return;
+  get lineToHighlight(): number | undefined {
+    if (this.stateMachine.currentState === 'start' || this.stateMachine.currentState === 'end') return;
     return this.state.floydWarshall.currentLine;
   }
 
@@ -115,7 +111,11 @@ export class AppComponent implements OnInit, AfterViewInit {
 
   private breakpoints = new Set<number>();
 
-  constructor(private adjacencyMatrixService: AdjacencyMatrixService, private cdr: ChangeDetectorRef) {}
+  constructor(
+    private adjacencyMatrixService: AdjacencyMatrixService,
+    private stateMachine: StateMachineService,
+    private cdr: ChangeDetectorRef
+  ) {}
 
   ngOnInit() {
     const tileMap = `...
@@ -135,7 +135,60 @@ export class AppComponent implements OnInit, AfterViewInit {
 
     this.isDone.subscribe((isDone) => {
       if (isDone) {
-        this.pause();
+        this.stateMachine.transitionTo('end');
+      }
+    });
+
+    this.stateMachine.transition.subscribe((transition) => {
+      switch (transition.to) {
+        case 'start': {
+          this.controlsState = new ControlsState(true, true, false, false, false);
+          for (const tooltip of this.tooltips) {
+            tooltip.disabled = false;
+          }
+          this.state = this.history[0];
+          this.history = [];
+          break;
+        }
+        case 'running': {
+          this.controlsState = new ControlsState(false, true, false, true, true);
+          const asyncLoop = () => {
+            if (
+              this.stateMachine.currentState === 'start' ||
+              this.stateMachine.currentState === 'paused' ||
+              this.stateMachine.currentState === 'end'
+            ) {
+              return;
+            }
+
+            this.history.push(this.state.clone());
+            this.state.floydWarshall!.stepForward();
+            this.cdr.markForCheck();
+
+            if (this.breakpoints.has(this.lineToHighlight!)) {
+              this.stateMachine.transitionTo('paused');
+              return;
+            }
+
+            setTimeout(asyncLoop, 500 - (this.speed / 100) * 500);
+          };
+          asyncLoop();
+          break;
+        }
+        case 'paused': {
+          this.controlsState = new ControlsState(false, false, false, false, false);
+          break;
+        }
+        case 'end': {
+          this.controlsState = new ControlsState(false, false, true, false, true);
+          break;
+        }
+      }
+
+      if (transition.from === 'start') {
+        for (const tooltip of this.tooltips) {
+          tooltip.disabled = false;
+        }
       }
     });
   }
@@ -146,82 +199,52 @@ export class AppComponent implements OnInit, AfterViewInit {
     }
   }
 
-  slidderLabel(value: number): string {
-    return `${value}%`;
-  }
-
-  stepForward() {
-    this.history.push(this.state.clone());
-
-    if (this.state.debugging) {
-      this.state.floydWarshall!.stepForward();
-      return;
-    }
-
-    for (const tooltip of this.tooltips) {
-      tooltip.disabled = false;
-    }
-    this.state.debugging = true;
-  }
-
-  stepBackward() {
-    if (this.history.length === 0) {
-      return;
-    }
-
-    this.state = this.history.pop()!;
-  }
-
-  reset() {
-    if (this.history.length > 0) {
-      this.state = this.history[0];
-      this.history = [];
-      this.pause();
-    }
-  }
-
-  playOrPause() {
-    if (this.isPaused) {
-      this.play();
-      return;
-    }
-
-    this.pause();
-  }
-
-  play() {
-    if (!this.isPaused) return;
-    this.isPaused = false;
-
-    const asyncLoop = () => {
-      setTimeout(() => {
-        this.stepForward();
-
-        if (this.breakpoints.has(this.currentLine!)) {
-          this.pause();
-        }
-
-        this.cdr.markForCheck();
-        if (this.pauseRequested) {
-          this.pauseRequested = false;
-          this.isPaused = true;
-          return;
-        }
-        asyncLoop();
-      }, 500 - (this.speed / 100) * 500);
-    };
-    asyncLoop();
-  }
-
-  pause() {
-    this.pauseRequested = true;
-  }
-
   handleDebuggerPoint(event: { line: number; isSet: boolean }) {
     if (event.isSet) {
       this.breakpoints.add(event.line);
     } else {
       this.breakpoints.delete(event.line);
+    }
+  }
+
+  handleControls(event: ControlsEvent) {
+    switch (event) {
+      case 'reset': {
+        this.stateMachine.transitionTo('start');
+        break;
+      }
+      case 'step-back': {
+        if (this.history.length === 1) {
+          this.stateMachine.transitionTo('start');
+          break;
+        }
+
+        this.state = this.history.pop()!;
+        if (this.stateMachine.currentState === 'end') {
+          this.stateMachine.transitionTo('paused');
+        }
+        break;
+      }
+      case 'play-pause': {
+        if (this.stateMachine.currentState === 'paused' || this.stateMachine.currentState === 'start') {
+          this.stateMachine.transitionTo('running');
+        } else {
+          this.stateMachine.transitionTo('paused');
+        }
+        break;
+      }
+      case 'step-forward': {
+        if (this.stateMachine.currentState === 'start') {
+          this.stateMachine.transitionTo('paused');
+        }
+
+        this.history.push(this.state.clone());
+        this.state.floydWarshall!.stepForward();
+        break;
+      }
+      default: {
+        this.speed = event;
+      }
     }
   }
 
@@ -279,12 +302,10 @@ function resample(matrix: number[][], factor: number): number[][] {
 }
 
 class State {
-  debugging = false;
   constructor(public floydWarshall: FloydWarshall) {}
 
   clone(): State {
     const state = new State(this.floydWarshall.clone());
-    state.debugging = this.debugging;
     return state;
   }
 }

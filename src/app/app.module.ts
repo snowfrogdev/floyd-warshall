@@ -12,9 +12,10 @@ import { MatButtonModule } from '@angular/material/button';
 import { AppComponent } from './app.component';
 import { CodeLineDirective } from './code-line.directive';
 import { DebuggerDotComponent } from './debugger-dot/debugger-dot.component';
+import { ControlsComponent } from './controls/controls.component';
 
 @NgModule({
-  declarations: [AppComponent, CodeLineDirective, DebuggerDotComponent],
+  declarations: [AppComponent, CodeLineDirective, DebuggerDotComponent, ControlsComponent],
   imports: [
     BrowserModule,
     BrowserAnimationsModule,

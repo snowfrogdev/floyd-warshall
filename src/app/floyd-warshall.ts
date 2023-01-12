@@ -1,7 +1,7 @@
 import { BehaviorSubject, Observable } from 'rxjs';
 
 export class FloydWarshall {
-  private _currentLine: number = 2;
+  private _currentLine: number = 1;
   get currentLine() {
     return this._currentLine;
   }
@@ -49,6 +49,12 @@ export class FloydWarshall {
   }
 
   lines: Map<number, () => void> = new Map([
+    [
+      1,
+      () => {
+        this._currentLine++;
+      },
+    ],
     [
       2,
       () => {

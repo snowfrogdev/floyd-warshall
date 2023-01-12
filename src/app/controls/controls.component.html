@@ -1,0 +1,26 @@
+<div class="controls" [class.controls-active]="dragHandleActive" cdkDrag>
+  <div class="controls-handle" cdkDragHandle (mousedown)="dragHandleActive = true" (mouseup)="dragHandleActive = false">
+    <mat-icon>drag_indicator</mat-icon>
+  </div>
+  <button mat-icon-button [disabled]="state.isResetDisabled" (click)="onResetClick()">
+    <mat-icon>replay</mat-icon>
+  </button>
+  <button mat-icon-button [disabled]="state.isStepBackDisabled" (click)="onStepBackClick()">
+    <mat-icon>skip_previous</mat-icon>
+  </button>
+  <button mat-icon-button [disabled]="state.isPlayPauseDisabled" (click)="onPlayPauseClick()">
+    <mat-icon *ngIf="state.isPlaying">pause</mat-icon>
+    <mat-icon *ngIf="!state.isPlaying">play_arrow</mat-icon>
+  </button>
+  <button mat-icon-button [disabled]="state.isStepForwardDisabled" (click)="onStepForwardClick()">
+    <mat-icon>skip_next</mat-icon>
+  </button>
+  <button mat-icon-button (click)="showSpeedControl = !showSpeedControl">
+    <mat-icon>speed</mat-icon>
+  </button>
+  <div *ngIf="showSpeedControl" class="speed-slider">
+    <mat-slider min="0" max="100" step="1" showTickMarks discrete [displayWith]="makeSliderLabel">
+      <input matSliderThumb value="100" (valueChange)="onSpeedChange($event)" />
+    </mat-slider>
+  </div>
+</div>

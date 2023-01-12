@@ -12,7 +12,7 @@ export class DebuggerDotComponent {
 
   @HostListener('click') onClick() {
     this.isSet = !this.isSet;
-    this.opacity = 1;
+    this.opacity = this.isSet ? 1 : 0.5;
     this.debuggerPoint.emit(this.isSet);
   }
 
