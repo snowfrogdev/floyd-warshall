@@ -4,13 +4,11 @@ import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
   Component,
-  ElementRef,
   OnInit,
-  ViewChild,
   ViewChildren,
 } from '@angular/core';
 import { MatTooltip } from '@angular/material/tooltip';
-import { Observable, tap } from 'rxjs';
+import { Observable, Subscription } from 'rxjs';
 import { AdjacencyMatrixService } from './adjacency-matrix.service';
 import { ControlsEvent, ControlsState } from './controls/controls.component';
 import { FloydWarshall } from './floyd-warshall';
@@ -55,6 +53,7 @@ export class AppComponent implements OnInit, AfterViewInit {
   tiles!: Tile[];
   numberOfCols = 0;
   numberOfRows = 0;
+  private isDoneSubscription: Subscription | undefined;
 
   get distForDisplay(): Observable<number[][] | undefined> {
     return this.dist;
@@ -133,11 +132,7 @@ export class AppComponent implements OnInit, AfterViewInit {
     this.adjacencyMatrix = this.adjacencyMatrixService.generateAdjacencyMatrix(tileMap);
     this.state = new State(new FloydWarshall(this.adjacencyMatrix));
 
-    this.isDone.subscribe((isDone) => {
-      if (isDone) {
-        this.stateMachine.transitionTo('end');
-      }
-    });
+    this.subscribeToIsDone();
 
     this.stateMachine.transition.subscribe((transition) => {
       switch (transition.to) {
@@ -148,6 +143,7 @@ export class AppComponent implements OnInit, AfterViewInit {
           }
           this.state = this.history[0];
           this.history = [];
+          this.subscribeToIsDone();
           break;
         }
         case 'running': {
@@ -193,6 +189,15 @@ export class AppComponent implements OnInit, AfterViewInit {
     });
   }
 
+  private subscribeToIsDone() {
+    this.isDoneSubscription?.unsubscribe();
+    this.isDoneSubscription = this.isDone.subscribe((isDone) => {
+      if (isDone) {
+        this.stateMachine.transitionTo('end');
+      }
+    });
+  }
+
   ngAfterViewInit() {
     for (const tooltip of this.tooltips) {
       tooltip.disabled = true;
@@ -220,6 +225,8 @@ export class AppComponent implements OnInit, AfterViewInit {
         }
 
         this.state = this.history.pop()!;
+        this.subscribeToIsDone();
+
         if (this.stateMachine.currentState === 'end') {
           this.stateMachine.transitionTo('paused');
         }
