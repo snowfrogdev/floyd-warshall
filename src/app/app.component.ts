@@ -8,10 +8,9 @@ import {
   ViewChildren,
 } from '@angular/core';
 import { MatTooltip } from '@angular/material/tooltip';
-import { Observable, Subscription } from 'rxjs';
 import { AdjacencyMatrixService } from './adjacency-matrix.service';
 import { ControlsEvent, ControlsState } from './controls/controls.component';
-import { FloydWarshall } from './floyd-warshall';
+import { FloydWarshallService } from './floyd-warshall.service';
 import { StateMachineService } from './state-machine.service';
 
 @Component({
@@ -53,59 +52,56 @@ export class AppComponent implements OnInit, AfterViewInit {
   tiles!: Tile[];
   numberOfCols = 0;
   numberOfRows = 0;
-  private isDoneSubscription: Subscription | undefined;
 
-  get distForDisplay(): Observable<number[][] | undefined> {
+  get distForDisplay(): readonly (readonly number[])[] | undefined {
     return this.dist;
   }
 
-  get nextForDisplay(): Observable<(number | null)[][] | undefined> {
+  get nextForDisplay(): readonly (readonly (number | null)[])[] | undefined {
     return this.next;
   }
 
-  history: State[] = [];
-  state!: State;
   controlsState = new ControlsState(true, true, false, false, false);
 
   get lineToHighlight(): number | undefined {
     if (this.stateMachine.currentState === 'start' || this.stateMachine.currentState === 'end') return;
-    return this.state.floydWarshall.currentLine;
+    return this.floydWarshallService.state.currentLine;
   }
 
-  get dist(): Observable<number[][] | undefined> {
-    return this.state.floydWarshall.dist;
+  get dist(): readonly (readonly number[])[] | undefined {
+    return this.floydWarshallService.state.dist;
   }
 
-  get next(): Observable<(number | null)[][] | undefined> {
-    return this.state.floydWarshall.next;
+  get next(): readonly (readonly (number | null)[])[] | undefined {
+    return this.floydWarshallService.state.next;
   }
 
-  get V(): number | undefined {
-    return this.state.floydWarshall?.V;
+  get V(): number {
+    return this.floydWarshallService.state.V;
   }
 
   get u(): number | undefined {
-    return this.state.floydWarshall?.u;
+    return this.floydWarshallService.state.u;
   }
 
   get v(): number | undefined {
-    return this.state.floydWarshall?.v;
+    return this.floydWarshallService.state.v;
   }
 
   get k(): number | undefined {
-    return this.state.floydWarshall?.k;
+    return this.floydWarshallService.state.k;
   }
 
   get i(): number | undefined {
-    return this.state.floydWarshall?.i;
+    return this.floydWarshallService.state.i;
   }
 
   get j(): number | undefined {
-    return this.state.floydWarshall?.j;
+    return this.floydWarshallService.state.j;
   }
 
-  get isDone(): Observable<boolean> {
-    return this.state.floydWarshall.isDone;
+  get isDone() {
+    return this.floydWarshallService.state.isDone;
   }
 
   private breakpoints = new Set<number>();
@@ -113,6 +109,7 @@ export class AppComponent implements OnInit, AfterViewInit {
   constructor(
     private adjacencyMatrixService: AdjacencyMatrixService,
     private stateMachine: StateMachineService,
+    private floydWarshallService: FloydWarshallService,
     private cdr: ChangeDetectorRef
   ) {}
 
@@ -130,9 +127,13 @@ export class AppComponent implements OnInit, AfterViewInit {
       .map((char) => (char === '#' ? new Tile('black') : new Tile('white')));
 
     this.adjacencyMatrix = this.adjacencyMatrixService.generateAdjacencyMatrix(tileMap);
-    this.state = new State(new FloydWarshall(this.adjacencyMatrix));
+    this.floydWarshallService.initialize(this.adjacencyMatrix);
 
-    this.subscribeToIsDone();
+    this.floydWarshallService.state$.subscribe((state) => {
+      if (state.isDone) {
+        this.stateMachine.transitionTo('end');
+      }
+    });
 
     this.stateMachine.transition.subscribe((transition) => {
       switch (transition.to) {
@@ -141,9 +142,6 @@ export class AppComponent implements OnInit, AfterViewInit {
           for (const tooltip of this.tooltips) {
             tooltip.disabled = false;
           }
-          this.state = this.history[0];
-          this.history = [];
-          this.subscribeToIsDone();
           break;
         }
         case 'running': {
@@ -157,8 +155,7 @@ export class AppComponent implements OnInit, AfterViewInit {
               return;
             }
 
-            this.history.push(this.state.clone());
-            this.state.floydWarshall!.stepForward();
+            this.floydWarshallService.stepForward();
             this.cdr.markForCheck();
 
             if (this.breakpoints.has(this.lineToHighlight!)) {
@@ -189,15 +186,6 @@ export class AppComponent implements OnInit, AfterViewInit {
     });
   }
 
-  private subscribeToIsDone() {
-    this.isDoneSubscription?.unsubscribe();
-    this.isDoneSubscription = this.isDone.subscribe((isDone) => {
-      if (isDone) {
-        this.stateMachine.transitionTo('end');
-      }
-    });
-  }
-
   ngAfterViewInit() {
     for (const tooltip of this.tooltips) {
       tooltip.disabled = true;
@@ -215,21 +203,24 @@ export class AppComponent implements OnInit, AfterViewInit {
   handleControls(event: ControlsEvent) {
     switch (event) {
       case 'reset': {
+        this.floydWarshallService.reset();
         this.stateMachine.transitionTo('start');
         break;
       }
       case 'step-back': {
-        if (this.history.length === 1) {
+        if (this.floydWarshallService.state.currentLine === 1) {
+          this.floydWarshallService.stepBackward();
           this.stateMachine.transitionTo('start');
           break;
         }
 
-        this.state = this.history.pop()!;
-        this.subscribeToIsDone();
-
         if (this.stateMachine.currentState === 'end') {
+          this.floydWarshallService.stepBackward();
           this.stateMachine.transitionTo('paused');
+          break;
         }
+
+        this.floydWarshallService.stepBackward();
         break;
       }
       case 'play-pause': {
@@ -244,9 +235,7 @@ export class AppComponent implements OnInit, AfterViewInit {
         if (this.stateMachine.currentState === 'start') {
           this.stateMachine.transitionTo('paused');
         }
-
-        this.history.push(this.state.clone());
-        this.state.floydWarshall!.stepForward();
+        this.floydWarshallService.stepForward();
         break;
       }
       default: {
@@ -306,13 +295,4 @@ function resample(matrix: number[][], factor: number): number[][] {
   }
 
   return resampled;
-}
-
-class State {
-  constructor(public floydWarshall: FloydWarshall) {}
-
-  clone(): State {
-    const state = new State(this.floydWarshall.clone());
-    return state;
-  }
 }
