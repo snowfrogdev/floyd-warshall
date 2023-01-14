@@ -1,4 +1,3 @@
-import { animate, AnimationBuilder, query, stagger, style, transition, trigger } from '@angular/animations';
 import {
   AfterViewInit,
   ChangeDetectionStrategy,
@@ -18,7 +17,6 @@ import { StateMachineService } from './state-machine.service';
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  animations: [trigger('collectionAnimation', [])],
 })
 export class AppComponent implements OnInit, AfterViewInit {
   @ViewChildren(MatTooltip) tooltips!: MatTooltip[];
@@ -38,7 +36,7 @@ export class AppComponent implements OnInit, AfterViewInit {
     return this.next;
   }
 
-  controlsState = {
+  controlsState: ControlsState = {
     isResetDisabled: true,
     isStepBackDisabled: true,
     isPlayPauseDisabled: false,
@@ -97,9 +95,10 @@ export class AppComponent implements OnInit, AfterViewInit {
   ) {}
 
   ngOnInit() {
-    const tileMap = `...
-...
-...`;
+    const tileMap = `....
+.##.
+.##.
+....`;
 
     const rows: string[] = tileMap.split(/\r?\n/);
     this.numberOfRows = rows.length;
@@ -256,7 +255,7 @@ export class AppComponent implements OnInit, AfterViewInit {
   getDistElementBackgroundColor(value: number): string {
     // If value is infinity, return red
     if (value === Infinity) {
-      return 'red';
+      return 'grey';
     }
 
     const ratio = value / (this.numberOfCols * this.numberOfRows);
@@ -269,7 +268,7 @@ export class AppComponent implements OnInit, AfterViewInit {
   getNextElementBackgroundColor(value: number | null): string {
     // If value is null, return red
     if (value === null) {
-      return 'red';
+      return 'grey';
     }
 
     const ratio = value / (this.numberOfCols * this.numberOfRows);
@@ -277,6 +276,32 @@ export class AppComponent implements OnInit, AfterViewInit {
     let g = Math.max(0, Math.ceil(255 * (1 - ratio)));
     let r = 0;
     return `rgb(${r}, ${g}, ${b})`;
+  }
+
+  isEvaluated(u: number, v: number): boolean {
+    return (
+      (this.u === u && this.v === v) ||
+      (this.i === u && this.j === v) ||
+      (this.i === u && this.k === v) ||
+      (this.k === u && this.j === v)
+    );
+  }
+
+  getMatrixOutlineStyle(u: number, v: number): string {
+    if (this.isEvaluated(u, v)) {
+      return '2px solid red';
+    }
+    return '1px solid black';
+  }
+
+  reconstructPath(u: number, v: number): number[] {
+    if (this.next![u][v] === null) return [];
+    const path = [u];
+    while (u !== v) {
+      u = this.next![u][v] as number;
+      path.push(u);
+    }
+    return path;
   }
 }
 

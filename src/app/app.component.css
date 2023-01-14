@@ -52,7 +52,6 @@
 .dist-element {
   width: 1rem;
   height: 1rem;
-  border: 1px solid black;
 }
 
 .next-matrix {
@@ -63,7 +62,7 @@
 .next-element {
   width: 1rem;
   height: 1rem;
-  border: 1px solid black;
+  outline: 1px solid black;
 }
 
 .code {

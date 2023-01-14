@@ -1,21 +1,23 @@
 <div class="container">
   <div class="left-panel">
     <div class="collections">
-      <div [@collectionAnimation]="(distForDisplay)?.length" class="dist-matrix">
-        <div [@collectionAnimation]="row.length" *ngFor="let row of distForDisplay" style="display: flex">
+      <div class="dist-matrix">
+        <div *ngFor="let row of distForDisplay; index as u" style="display: flex">
           <div
-            *ngFor="let element of row"
+            *ngFor="let element of row; index as v"
             class="dist-element"
             [ngStyle]="{
-              'background-color': getDistElementBackgroundColor(element)
+              'background-color': getDistElementBackgroundColor(element),
+              'outline': getMatrixOutlineStyle(u, v),
+              'z-index': isEvaluated(u, v) ? 1 : 0
             }"
           ></div>
         </div>
       </div>
-      <div [@collectionAnimation]="(nextForDisplay)?.length" class="next-matrix">
-        <div [@collectionAnimation]="row.length" *ngFor="let row of next" style="display: flex">
+      <div class="next-matrix">
+        <div *ngFor="let row of next; index as u" style="display: flex">
           <div
-            *ngFor="let element of row"
+            *ngFor="let element of row; index as v"
             class="next-element"
             [ngStyle]="{
               'background-color': getNextElementBackgroundColor(element)
@@ -69,7 +71,7 @@
 <span [appCodeLine]="22" [lineToHighlight]="lineToHighlight" (debuggerPoint)="handleDebuggerPoint($event)">return <span [matTooltip]="dist | json">dist</span>, <span [matTooltip]="next | json">next</span></span>
 
 function reconstructPath(next, u, v):
-  if next[u][v] == -1:
+  if next[u][v] == null:
     return []
   path = [u]
   while u != v:
