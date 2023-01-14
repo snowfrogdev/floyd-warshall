@@ -18,30 +18,7 @@ import { StateMachineService } from './state-machine.service';
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  animations: [
-    trigger('collectionAnimation', [
-      /* transition(':enter', [
-        query(
-          ':enter',
-          [
-            style({ opacity: 0, transform: 'translateY(-100px)' }),
-            stagger(5, [animate('500ms cubic-bezier(0.35, 0, 0.25, 1)', style({ opacity: 1, transform: 'none' }))]),
-          ],
-          { optional: true }
-        ),
-      ]),      transition(':leave', [
-        query(
-          ':leave',
-          [
-            stagger(5, [
-              animate('500ms cubic-bezier(0.35, 0, 0.25, 1)', style({ opacity: 0, transform: 'translateY(-100px)' })),
-            ]),
-          ],
-          { optional: true }
-        ),
-      ]), */
-    ]),
-  ],
+  animations: [trigger('collectionAnimation', [])],
 })
 export class AppComponent implements OnInit, AfterViewInit {
   @ViewChildren(MatTooltip) tooltips!: MatTooltip[];
@@ -61,7 +38,13 @@ export class AppComponent implements OnInit, AfterViewInit {
     return this.next;
   }
 
-  controlsState = new ControlsState(true, true, false, false, false);
+  controlsState = {
+    isResetDisabled: true,
+    isStepBackDisabled: true,
+    isPlayPauseDisabled: false,
+    isPlaying: false,
+    isStepForwardDisabled: false,
+  };
 
   get lineToHighlight(): number | undefined {
     if (this.stateMachine.currentState === 'start' || this.stateMachine.currentState === 'end') return;
@@ -138,14 +121,28 @@ export class AppComponent implements OnInit, AfterViewInit {
     this.stateMachine.transition.subscribe((transition) => {
       switch (transition.to) {
         case 'start': {
-          this.controlsState = new ControlsState(true, true, false, false, false);
+          this.controlsState = {
+            isResetDisabled: true,
+            isStepBackDisabled: true,
+            isPlayPauseDisabled: false,
+            isPlaying: false,
+            isStepForwardDisabled: false,
+          };
+
           for (const tooltip of this.tooltips) {
             tooltip.disabled = false;
           }
           break;
         }
         case 'running': {
-          this.controlsState = new ControlsState(false, true, false, true, true);
+          this.controlsState = {
+            isResetDisabled: false,
+            isStepBackDisabled: true,
+            isPlayPauseDisabled: false,
+            isPlaying: true,
+            isStepForwardDisabled: true,
+          };
+
           const asyncLoop = () => {
             if (
               this.stateMachine.currentState === 'start' ||
@@ -169,11 +166,23 @@ export class AppComponent implements OnInit, AfterViewInit {
           break;
         }
         case 'paused': {
-          this.controlsState = new ControlsState(false, false, false, false, false);
+          this.controlsState = {
+            isResetDisabled: false,
+            isStepBackDisabled: false,
+            isPlayPauseDisabled: false,
+            isPlaying: false,
+            isStepForwardDisabled: false,
+          };
           break;
         }
         case 'end': {
-          this.controlsState = new ControlsState(false, false, true, false, true);
+          this.controlsState = {
+            isResetDisabled: false,
+            isStepBackDisabled: false,
+            isPlayPauseDisabled: true,
+            isPlaying: false,
+            isStepForwardDisabled: true,
+          };
           break;
         }
       }

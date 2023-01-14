@@ -1,14 +1,12 @@
 import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output } from '@angular/core';
 
-export class ControlsState {
-  constructor(
-    readonly isResetDisabled: boolean,
-    readonly isStepBackDisabled: boolean,
-    readonly isPlayPauseDisabled: boolean,
-    readonly isPlaying: boolean,
-    readonly isStepForwardDisabled: boolean
-  ) {}
-}
+export type ControlsState = {
+  readonly isResetDisabled: boolean;
+  readonly isStepBackDisabled: boolean;
+  readonly isPlayPauseDisabled: boolean;
+  readonly isPlaying: boolean;
+  readonly isStepForwardDisabled: boolean;
+};
 
 export type ControlsEvent = 'reset' | 'step-back' | 'play-pause' | 'step-forward' | number;
 
@@ -20,7 +18,13 @@ export type ControlsEvent = 'reset' | 'step-back' | 'play-pause' | 'step-forward
 })
 export class ControlsComponent {
   @Output('emit') emitter = new EventEmitter<ControlsEvent>();
-  @Input() state: ControlsState = new ControlsState(true, true, false, false, false);
+  @Input() state: ControlsState = {
+    isResetDisabled: true,
+    isStepBackDisabled: true,
+    isPlayPauseDisabled: false,
+    isPlaying: false,
+    isStepForwardDisabled: false,
+  };
   dragHandleActive = false;
   showSpeedControl = false;
 
