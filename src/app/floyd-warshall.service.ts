@@ -7,6 +7,7 @@ import { cloneMatrix } from './utils';
   providedIn: 'root',
 })
 export class FloydWarshallService {
+  private historyIndex = 0;
   private history: FloydWarshallState[] = [];
   private _state = new BehaviorSubject<FloydWarshallState>(new FloydWarshallState([]));
   state$ = this._state.asObservable();
@@ -15,8 +16,10 @@ export class FloydWarshallService {
   }
 
   initialize(adjacencyMatrix: readonly (readonly number[])[]): void {
+    this.historyIndex = 0;
     this.history = [];
     this._state.next(new FloydWarshallState(adjacencyMatrix));
+    this.history.push(this.state);
   }
 
   /**
@@ -135,23 +138,30 @@ export class FloydWarshallService {
   ]);
 
   stepBackward() {
-    if (this.history.length > 0) {
-      this._state.next(this.history.pop()!);
+    this.historyIndex--;
+    const stateFromHistory = this.history[this.historyIndex];
+    if (stateFromHistory) {
+      this._state.next(stateFromHistory);
     }
   }
 
   stepForward() {
-    this.history.push(this.state);
+    this.historyIndex++;
+    const stateFromHistory = this.history[this.historyIndex];
+    if (stateFromHistory) {
+      this._state.next(stateFromHistory);
+      return;
+    }
+
     const instruction = this.lines.get(this.state.currentLine)!;
     const [newState = this.state, nextLine = this.state.currentLine + 1] = instruction();
     this._state.next(newState.setCurrentLine(nextLine));
+    this.history.push(this.state);
   }
 
   reset() {
-    if (this.history.length > 0) {
-      const newState = this.history[0];
-      this.history = [];
-      this._state.next(newState);
-    }
+    this.historyIndex = 0;
+    const stateFromHistory = this.history[0];
+    this._state.next(stateFromHistory);
   }
 }
