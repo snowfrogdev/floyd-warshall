@@ -129,7 +129,7 @@ export class AppComponent implements OnInit, AfterViewInit {
           };
 
           for (const tooltip of this.tooltips) {
-            tooltip.disabled = false;
+            tooltip.disabled = true;
           }
           break;
         }
@@ -216,7 +216,7 @@ export class AppComponent implements OnInit, AfterViewInit {
         break;
       }
       case 'step-back': {
-        if (this.floydWarshallService.state.currentLine === 1) {
+        if (this.floydWarshallService.state.currentLine === 2) {
           this.floydWarshallService.stepBackward();
           this.stateMachine.transitionTo('start');
           break;
