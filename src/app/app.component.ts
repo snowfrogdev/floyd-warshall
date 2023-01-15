@@ -95,10 +95,9 @@ export class AppComponent implements OnInit, AfterViewInit {
   ) {}
 
   ngOnInit() {
-    const tileMap = `....
-.##.
-.##.
-....`;
+    const tileMap = `...
+.#.
+...`;
 
     const rows: string[] = tileMap.split(/\r?\n/);
     this.numberOfRows = rows.length;

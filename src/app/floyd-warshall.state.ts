@@ -137,4 +137,40 @@ export class FloydWarshallState {
     floydWarshall._j = this._j;
     return floydWarshall;
   }
+
+  static from(dto: FloydWarshallStateDto): FloydWarshallState {
+    const floydWarshall = new FloydWarshallState(dto.adjacencyMatrix);
+    floydWarshall._currentLine = dto._currentLine;
+    floydWarshall._isDone = dto._isDone;
+    floydWarshall._V = dto._V;
+    floydWarshall._dist = dto._dist;
+    floydWarshall._next = dto._next;
+    floydWarshall._u = dto._u;
+    floydWarshall._v = dto._v;
+    floydWarshall._k = dto._k;
+    floydWarshall._i = dto._i;
+    floydWarshall._j = dto._j;
+    return floydWarshall;
+  }
+}
+
+export interface FloydWarshallStateDto {
+  _currentLine: number;
+  _isDone: false;
+
+  _V: number;
+  _dist: readonly (readonly number[])[] | undefined;
+
+  _next: readonly (readonly (number | null)[])[] | undefined;
+
+  _u: number | undefined;
+
+  _v: number | undefined;
+
+  _k: number | undefined;
+
+  _i: number | undefined;
+
+  _j: number | undefined;
+  adjacencyMatrix: readonly (readonly number[])[];
 }
