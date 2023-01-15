@@ -72,3 +72,7 @@
   font-feature-settings: "calt" 1;
   text-rendering: optimizeLegibility;
 }
+
+.progress-bar {
+  margin: 1rem;
+}

@@ -8,7 +8,7 @@
             class="dist-element"
             [ngStyle]="{
               'background-color': getDistElementBackgroundColor(element),
-              'outline': getMatrixOutlineStyle(u, v),
+              outline: getMatrixOutlineStyle(u, v),
               'z-index': isEvaluated(u, v) ? 1 : 0
             }"
           ></div>
@@ -44,6 +44,13 @@
     </div>
 
     <app-controls [state]="controlsState" (emit)="handleControls($event)"></app-controls>
+    <mat-progress-bar
+      class="progress-bar"
+      mode="buffer"
+      [value]="progressValue | async"
+      [bufferValue]="bufferValue | async"
+    >
+    </mat-progress-bar>
   </div>
 
   <div class="right-panel">

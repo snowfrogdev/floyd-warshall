@@ -8,6 +8,7 @@ import { MatSliderModule } from '@angular/material/slider';
 import { DragDropModule } from '@angular/cdk/drag-drop';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
+import { MatProgressBarModule } from '@angular/material/progress-bar';
 
 import { AppComponent } from './app.component';
 import { CodeLineDirective } from './code-line.directive';
@@ -27,6 +28,7 @@ import { ControlsComponent } from './controls/controls.component';
     DragDropModule,
     MatIconModule,
     MatButtonModule,
+    MatProgressBarModule,
   ],
   providers: [],
   bootstrap: [AppComponent],

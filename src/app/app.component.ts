@@ -7,6 +7,7 @@ import {
   ViewChildren,
 } from '@angular/core';
 import { MatTooltip } from '@angular/material/tooltip';
+import { Observable } from 'rxjs';
 import { AdjacencyMatrixService } from './adjacency-matrix.service';
 import { ControlsEvent, ControlsState } from './controls/controls.component';
 import { FloydWarshallService } from './floyd-warshall.service';
@@ -81,8 +82,16 @@ export class AppComponent implements OnInit, AfterViewInit {
     return this.floydWarshallService.state.j;
   }
 
-  get isDone() {
+  get isDone(): boolean {
     return this.floydWarshallService.state.isDone;
+  }
+
+  get progressValue(): Observable<number> {
+    return this.floydWarshallService.progressValue$;
+  }
+
+  get bufferValue(): Observable<number> {
+    return this.floydWarshallService.bufferValue$;
   }
 
   private breakpoints = new Set<number>();
@@ -95,9 +104,10 @@ export class AppComponent implements OnInit, AfterViewInit {
   ) {}
 
   ngOnInit() {
-    const tileMap = `...
-.#.
-...`;
+    const tileMap = `....
+.#..
+.#..
+....`;
 
     const rows: string[] = tileMap.split(/\r?\n/);
     this.numberOfRows = rows.length;
