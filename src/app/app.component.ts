@@ -6,6 +6,7 @@ import {
   OnInit,
   ViewChildren,
 } from '@angular/core';
+import { MatSliderDragEvent } from '@angular/material/slider';
 import { MatTooltip } from '@angular/material/tooltip';
 import { Observable } from 'rxjs';
 import { AdjacencyMatrixService } from './adjacency-matrix.service';
@@ -193,6 +194,16 @@ export class AppComponent implements OnInit, AfterViewInit {
           };
           break;
         }
+        case 'seeking': {
+          this.controlsState = {
+            isResetDisabled: true,
+            isStepBackDisabled: true,
+            isPlayPauseDisabled: true,
+            isPlaying: false,
+            isStepForwardDisabled: true,
+          };
+          break;
+        }
       }
 
       if (transition.from === 'start') {
@@ -311,6 +322,28 @@ export class AppComponent implements OnInit, AfterViewInit {
       path.push(u);
     }
     return path;
+  }
+
+  seek(percentage: number) {
+    this.stateMachine.transitionTo('seeking');
+    this.floydWarshallService.seek(percentage);
+  }
+
+  seekEnd(dragEvent: MatSliderDragEvent) {
+    switch(dragEvent.value) {
+      case 0: {
+        this.stateMachine.transitionTo('start');
+        break;
+      }
+      case 100: {
+        this.stateMachine.transitionTo('end');
+        break;
+      }
+      default: {
+        this.stateMachine.transitionTo('paused');
+        break;
+      }
+    }
   }
 }
 

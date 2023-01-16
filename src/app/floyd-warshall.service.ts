@@ -99,7 +99,14 @@ export class FloydWarshallService {
       11.0115 * totalTiles ** 2 -
       31.3267 * totalTiles +
       112.277;
-    const progressValue = (this.historyIndex / numberOfStatesEstimate) * 100;
+    const progressValue = Math.ceil((this.historyIndex / numberOfStatesEstimate) * 100);
     this._progressValue.next(progressValue);
+  }
+
+  seek(percentage: number) {
+    this.historyIndex = Math.min(Math.round((percentage / 100) * this.history.length), this.history.length - 1);
+    this.updateProgressValue();
+    const stateFromHistory = this.history[this.historyIndex];
+    this._state.next(stateFromHistory);
   }
 }

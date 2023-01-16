@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, Subject } from 'rxjs';
 
-export type AppState = 'start' | 'running' | 'paused' | 'end';
+export type AppState = 'start' | 'running' | 'paused' | 'end' | 'seeking';
 
 interface StateTransition {
   from: AppState;
@@ -9,16 +9,29 @@ interface StateTransition {
 }
 
 const allowedTransitions: StateTransition[] = [
+  { from: 'start', to: 'start' },
   { from: 'start', to: 'running' },
   { from: 'start', to: 'paused' },
+  { from: 'start', to: 'seeking' },
+  { from: 'running', to: 'running' },
   { from: 'running', to: 'start' },
   { from: 'running', to: 'paused' },
   { from: 'running', to: 'end' },
+  { from: 'running', to: 'seeking' },
+  { from: 'paused', to: 'paused' },
   { from: 'paused', to: 'start' },
   { from: 'paused', to: 'running' },
   { from: 'paused', to: 'end' },
+  { from: 'paused', to: 'seeking' },
+  { from: 'end', to: 'end' },
   { from: 'end', to: 'start' },
   { from: 'end', to: 'paused' },
+  { from: 'end', to: 'seeking' },
+  { from: 'seeking', to: 'seeking' },
+  { from: 'seeking', to: 'start' },
+  { from: 'seeking', to: 'running' },
+  { from: 'seeking', to: 'paused' },
+  { from: 'seeking', to: 'end' },
 ];
 
 @Injectable({
@@ -36,9 +49,7 @@ export class StateMachineService {
   constructor() {}
 
   canTransitionTo(state: AppState): boolean {
-    return allowedTransitions.some(
-      (transition) => transition.from === this._currentState && transition.to === state
-    );
+    return allowedTransitions.some((transition) => transition.from === this._currentState && transition.to === state);
   }
 
   transitionTo(state: AppState): void {

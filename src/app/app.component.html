@@ -51,6 +51,11 @@
       [bufferValue]="bufferValue | async"
     >
     </mat-progress-bar>
+    <div class="slider-container">
+      <mat-slider class="progress-slider" [min]="0" [max]="100">
+      <input matSliderThumb [value]="progressValue | async" (valueChange)="seek($event)" (dragEnd)="seekEnd($event)"/>
+    </mat-slider>
+    </div>
   </div>
 
   <div class="right-panel">
