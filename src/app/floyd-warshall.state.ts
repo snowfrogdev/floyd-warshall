@@ -14,12 +14,12 @@ export class FloydWarshallState {
   public get V(): number {
     return this._V;
   }
-  private _dist: readonly (readonly number[])[] | undefined;
+  private _dist: number[][] | undefined;
   get dist(): readonly (readonly number[])[] | undefined {
     return this._dist;
   }
 
-  private _next: readonly (readonly (number | null)[])[] | undefined;
+  private _next: (number | null)[][] | undefined;
   get next(): readonly (readonly (number | null)[])[] | undefined {
     return this._next;
   }
@@ -59,7 +59,7 @@ export class FloydWarshallState {
     return copy;
   }
 
-  set_dist(matrix: readonly (readonly number[])[]): FloydWarshallState {
+  set_dist(matrix: number[][]): FloydWarshallState {
     const copy = this.clone();
     copy._dist = matrix;
     return copy;
@@ -67,13 +67,11 @@ export class FloydWarshallState {
 
   update_dist(i: number, j: number, value: number): FloydWarshallState {
     const copy = this.clone();
-    const dist = cloneMatrix(copy._dist!);
-    dist[i][j] = value;
-    copy._dist = dist;
+    copy._dist![i][j] = value;
     return copy;
   }
 
-  set_next(matrix: readonly (readonly (number | null)[])[]): FloydWarshallState {
+  set_next(matrix:  (number | null)[][]): FloydWarshallState {
     const copy = this.clone();
     copy._next = matrix;
     return copy;
@@ -81,9 +79,7 @@ export class FloydWarshallState {
 
   update_next(i: number, j: number, value: number | null): FloydWarshallState {
     const copy = this.clone();
-    const next = cloneMatrix(copy._next!);
-    next[i][j] = value;
-    copy._next = next;
+    copy._next![i][j] = value;
     return copy;
   }
 
@@ -159,9 +155,9 @@ export interface FloydWarshallStateDto {
   _isDone: false;
 
   _V: number;
-  _dist: readonly (readonly number[])[] | undefined;
+  _dist: number[][] | undefined;
 
-  _next: readonly (readonly (number | null)[])[] | undefined;
+  _next: (number | null)[][] | undefined;
 
   _u: number | undefined;
 
