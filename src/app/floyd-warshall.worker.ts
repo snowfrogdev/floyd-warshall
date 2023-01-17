@@ -3,7 +3,7 @@
 import { lines } from './floyd-warshall-algo';
 import { FloydWarshallState, FloydWarshallStateDto } from './floyd-warshall.state';
 
-addEventListener('message', ({ data }: { data: FloydWarshallStateDto}) => {
+addEventListener('message', ({ data }: { data: FloydWarshallStateDto }) => {
   let state: FloydWarshallState = FloydWarshallState.from(data);
   while (!state.isDone) {
     const instruction = lines.get(state.currentLine)!;

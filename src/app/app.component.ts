@@ -14,6 +14,7 @@ import { ControlsEvent, ControlsState } from './controls/controls.component';
 import { FloydWarshallService } from './floyd-warshall.service';
 import { RulesEngineService } from './rules-engine.service';
 import { StateMachineService } from './state-machine.service';
+import { get2DMatrixFrom } from './utils';
 
 @Component({
   selector: 'app-root',
@@ -53,11 +54,13 @@ export class AppComponent implements OnInit, AfterViewInit {
   }
 
   get dist(): readonly (readonly number[])[] | undefined {
-    return this.floydWarshallService.state.dist;
+    if (this.floydWarshallService.state.dist === undefined) return;
+    return get2DMatrixFrom(this.floydWarshallService.state.dist, this.V);
   }
 
   get next(): readonly (readonly (number | null)[])[] | undefined {
-    return this.floydWarshallService.state.next;
+    if (this.floydWarshallService.state.next === undefined) return;
+    return get2DMatrixFrom(this.floydWarshallService.state.next, this.V);
   }
 
   get V(): number {

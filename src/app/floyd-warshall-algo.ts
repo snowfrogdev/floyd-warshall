@@ -1,5 +1,5 @@
 import { FloydWarshallState } from './floyd-warshall.state';
-import { cloneMatrix } from './utils';
+import { get1DIndexFrom, get1DMatrixFrom } from './utils';
 
 /**
  * Each line of the algorithm is represented by a function that is executed when the line is reached.
@@ -8,11 +8,8 @@ import { cloneMatrix } from './utils';
  */
 export const lines = new Map<number, (state: FloydWarshallState) => [FloydWarshallState?, number?]>([
   [1, (state: FloydWarshallState) => []],
-  [2, (state: FloydWarshallState) => [state.set_dist(cloneMatrix(state.adjacencyMatrix))]],
-  [
-    3,
-    (state: FloydWarshallState) => [state.set_next(Array.from({ length: state.V }, () => Array(state.V).fill(null)))],
-  ],
+  [2, (state: FloydWarshallState) => [state.set_dist(get1DMatrixFrom(state.adjacencyMatrix))]],
+  [3, (state: FloydWarshallState) => [state.set_next(Array.from({ length: state.V * state.V }, () => null))]],
   [
     4,
     (state: FloydWarshallState) => {
@@ -94,7 +91,11 @@ export const lines = new Map<number, (state: FloydWarshallState) => [FloydWarsha
   [
     18,
     (state: FloydWarshallState) => {
-      if (state.dist![state.i!][state.j!] > state.dist![state.i!][state.k!] + state.dist![state.k!][state.j!]) {
+      if (
+        state.dist![get1DIndexFrom(state.i!, state.j!, state.V)] >
+        state.dist![get1DIndexFrom(state.i!, state.k!, state.V)] +
+          state.dist![get1DIndexFrom(state.k!, state.j!, state.V)]
+      ) {
         return [];
       }
       return [, 17];
@@ -103,9 +104,20 @@ export const lines = new Map<number, (state: FloydWarshallState) => [FloydWarsha
   [
     19,
     (state: FloydWarshallState) => [
-      state.update_dist(state.i!, state.j!, state.dist![state.i!][state.k!] + state.dist![state.k!][state.j!]),
+      state.update_dist(
+        state.i!,
+        state.j!,
+        state.dist![get1DIndexFrom(state.i!, state.k!, state.V)] +
+          state.dist![get1DIndexFrom(state.k!, state.j!, state.V)]
+      ),
     ],
   ],
-  [20, (state: FloydWarshallState) => [state.update_next(state.i!, state.j!, state.next![state.i!][state.k!]), 17]],
+  [
+    20,
+    (state: FloydWarshallState) => [
+      state.update_next(state.i!, state.j!, state.next![get1DIndexFrom(state.i!, state.k!, state.V)]),
+      17,
+    ],
+  ],
   [22, (state: FloydWarshallState) => [state.setIsDone(true)]],
 ]);
