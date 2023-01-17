@@ -3,7 +3,7 @@ import { BehaviorSubject, Subject } from 'rxjs';
 
 export type AppState = 'start' | 'running' | 'paused' | 'end' | 'seeking';
 
-interface StateTransition {
+export interface StateTransition {
   from: AppState;
   to: AppState;
 }

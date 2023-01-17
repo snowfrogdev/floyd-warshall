@@ -12,6 +12,7 @@ import { Observable } from 'rxjs';
 import { AdjacencyMatrixService } from './adjacency-matrix.service';
 import { ControlsEvent, ControlsState } from './controls/controls.component';
 import { FloydWarshallService } from './floyd-warshall.service';
+import { RulesEngineService } from './rules-engine.service';
 import { StateMachineService } from './state-machine.service';
 
 @Component({
@@ -95,13 +96,14 @@ export class AppComponent implements OnInit, AfterViewInit {
     return this.floydWarshallService.bufferValue$;
   }
 
-  private breakpoints = new Set<number>();
+  readonly breakpoints = new Set<number>();
 
   constructor(
     private adjacencyMatrixService: AdjacencyMatrixService,
-    private stateMachine: StateMachineService,
-    private floydWarshallService: FloydWarshallService,
-    private cdr: ChangeDetectorRef
+    readonly stateMachine: StateMachineService,
+    private rulesEngine: RulesEngineService,
+    readonly floydWarshallService: FloydWarshallService,
+    readonly cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit() {
@@ -128,89 +130,7 @@ export class AppComponent implements OnInit, AfterViewInit {
     });
 
     this.stateMachine.transition.subscribe((transition) => {
-      switch (transition.to) {
-        case 'start': {
-          this.controlsState = {
-            isResetDisabled: true,
-            isStepBackDisabled: true,
-            isPlayPauseDisabled: false,
-            isPlaying: false,
-            isStepForwardDisabled: false,
-          };
-
-          for (const tooltip of this.tooltips) {
-            tooltip.disabled = true;
-          }
-          break;
-        }
-        case 'running': {
-          this.controlsState = {
-            isResetDisabled: false,
-            isStepBackDisabled: true,
-            isPlayPauseDisabled: false,
-            isPlaying: true,
-            isStepForwardDisabled: true,
-          };
-
-          const asyncLoop = () => {
-            if (
-              this.stateMachine.currentState === 'start' ||
-              this.stateMachine.currentState === 'paused' ||
-              this.stateMachine.currentState === 'end'
-            ) {
-              return;
-            }
-
-            this.floydWarshallService.stepForward();
-            this.cdr.markForCheck();
-
-            if (this.breakpoints.has(this.lineToHighlight!)) {
-              this.stateMachine.transitionTo('paused');
-              return;
-            }
-
-            setTimeout(asyncLoop, 500 - (this.speed / 100) * 500);
-          };
-          asyncLoop();
-          break;
-        }
-        case 'paused': {
-          this.controlsState = {
-            isResetDisabled: false,
-            isStepBackDisabled: false,
-            isPlayPauseDisabled: false,
-            isPlaying: false,
-            isStepForwardDisabled: false,
-          };
-          break;
-        }
-        case 'end': {
-          this.controlsState = {
-            isResetDisabled: false,
-            isStepBackDisabled: false,
-            isPlayPauseDisabled: true,
-            isPlaying: false,
-            isStepForwardDisabled: true,
-          };
-          break;
-        }
-        case 'seeking': {
-          this.controlsState = {
-            isResetDisabled: true,
-            isStepBackDisabled: true,
-            isPlayPauseDisabled: true,
-            isPlaying: false,
-            isStepForwardDisabled: true,
-          };
-          break;
-        }
-      }
-
-      if (transition.from === 'start') {
-        for (const tooltip of this.tooltips) {
-          tooltip.disabled = false;
-        }
-      }
+      this.rulesEngine.execute(transition, this);
     });
   }
 
@@ -229,47 +149,7 @@ export class AppComponent implements OnInit, AfterViewInit {
   }
 
   handleControls(event: ControlsEvent) {
-    switch (event) {
-      case 'reset': {
-        this.floydWarshallService.reset();
-        this.stateMachine.transitionTo('start');
-        break;
-      }
-      case 'step-back': {
-        if (this.floydWarshallService.state.currentLine === 2) {
-          this.floydWarshallService.stepBackward();
-          this.stateMachine.transitionTo('start');
-          break;
-        }
-
-        if (this.stateMachine.currentState === 'end') {
-          this.floydWarshallService.stepBackward();
-          this.stateMachine.transitionTo('paused');
-          break;
-        }
-
-        this.floydWarshallService.stepBackward();
-        break;
-      }
-      case 'play-pause': {
-        if (this.stateMachine.currentState === 'paused' || this.stateMachine.currentState === 'start') {
-          this.stateMachine.transitionTo('running');
-        } else {
-          this.stateMachine.transitionTo('paused');
-        }
-        break;
-      }
-      case 'step-forward': {
-        if (this.stateMachine.currentState === 'start') {
-          this.stateMachine.transitionTo('paused');
-        }
-        this.floydWarshallService.stepForward();
-        break;
-      }
-      default: {
-        this.speed = event;
-      }
-    }
+    this.rulesEngine.execute(event, this);
   }
 
   getDistElementBackgroundColor(value: number): string {
@@ -330,7 +210,7 @@ export class AppComponent implements OnInit, AfterViewInit {
   }
 
   seekEnd(dragEvent: MatSliderDragEvent) {
-    switch(dragEvent.value) {
+    switch (dragEvent.value) {
       case 0: {
         this.stateMachine.transitionTo('start');
         break;
