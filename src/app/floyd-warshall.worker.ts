@@ -18,7 +18,7 @@ addEventListener('message', ({ data }: { data: FloydWarshallStateDto }) => {
     index++;
     const isCheckPoint = index % checkPointSize === 0;
     if (isCheckPoint) {
-      postMessage({index,...state});
+      postMessage({ index, ...state });
     }
   }
 
