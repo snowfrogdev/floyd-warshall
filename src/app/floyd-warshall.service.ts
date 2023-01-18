@@ -28,7 +28,7 @@ export class FloydWarshallService {
   private bufferSize = 0;
 
   initialize(adjacencyMatrix: readonly (readonly number[])[]): void {
-    this.estimatedNumberOfStates = estimateNumberOfStates(adjacencyMatrix);
+    this.estimatedNumberOfStates = estimateNumberOfStates(adjacencyMatrix.length);
     this.bufferSize = Math.max(1, Math.ceil(this.estimatedNumberOfStates / MAX_CHECKPOINTS));
 
     this.stateIndex = 0;
@@ -42,7 +42,8 @@ export class FloydWarshallService {
       worker.onmessage = ({ data }: { data: FloydWarshallStateDto }) => {
         const state = FloydWarshallState.from(data);
         this.checkpoints.set(data.index, state);
-        //this.updateBufferValue();
+        const bufferValue = Math.ceil((data.index / this.estimatedNumberOfStates) * 100);
+        this._bufferValue.next(bufferValue);
       };
     } else {
       // Web Workers are not supported in this environment.
@@ -52,54 +53,49 @@ export class FloydWarshallService {
 
   stepBackward() {
     this.stateIndex--;
-    //this.updateProgressValue();
     if (this.buffer.length === 0) {
       this.seek(this.stateIndex);
       return;
     }
 
     this._state.next(this.buffer.pop()![1]);
+    this.updateProgressValue();
   }
 
   stepForward() {
     this.buffer.push([this.stateIndex, this.state]);
 
     this.stateIndex++;
-    //this.updateProgressValue();
     const instruction = lines.get(this.state.currentLine)!;
     const [newState = this.state, nextLine = this.state.currentLine + 1] = instruction(this.state);
     this._state.next(newState.setCurrentLine(nextLine));
     if (this.buffer.length > this.bufferSize) {
       this.buffer.shift();
     }
+    this.updateProgressValue();
   }
 
   reset() {
     this.stateIndex = 0;
-    //this.updateProgressValue();
+
     this.buffer = [];
     this._state.next(this.checkpoints.get(0)!);
+    this.updateProgressValue();
   }
-
-  /* private updateBufferValue() {
-    const numberOfStatesEstimate = estimateNumberOfStates(this.state.adjacencyMatrix);
-    const bufferValue = Math.ceil((this.buffer.length / numberOfStatesEstimate) * 100);
-    this._bufferValue.next(bufferValue);
-  }
-
-  private updateProgressValue() {
-    const numberOfStatesEstimate = estimateNumberOfStates(this.state.adjacencyMatrix);
-    const progressValue = Math.ceil((this.historyIndex / numberOfStatesEstimate) * 100);
-    this._progressValue.next(progressValue);
-  }*/
 
   seek(stateIndex: number) {
-    //this.updateProgressValue();
-
+    this.stateIndex = stateIndex;
+    this.buffer = [];
     const closest: [number, FloydWarshallState] = this.findClosestCheckPointBeforeOrAt(stateIndex);
 
     let index = closest![0];
     let state: FloydWarshallState = closest![1];
+
+    if (index === stateIndex) {
+      this._state.next(state);
+      this.updateProgressValue();
+      return;
+    }
 
     while (!state.isDone && index <= stateIndex) {
       const instruction = lines.get(state.currentLine)!;
@@ -110,6 +106,7 @@ export class FloydWarshallService {
     }
 
     this._state.next(this.buffer.pop()![1]);
+    this.updateProgressValue();
   }
 
   private findClosestCheckPointBeforeOrAt(stateIndex: number): [number, FloydWarshallState] {
@@ -132,7 +129,12 @@ export class FloydWarshallService {
     return closest!;
   }
 
+  private updateProgressValue() {
+    const progressValue = Math.ceil((this.stateIndex / this.estimatedNumberOfStates) * 100);
+    this._progressValue.next(progressValue);
+  }
+
   getStateIndexFrom(percentage: number) {
-    return Math.min(Math.round((percentage / 100) * this.estimatedNumberOfStates), this.buffer.length - 1);
+    return Math.round((percentage / 100) * (this.estimatedNumberOfStates - 1));
   }
 }

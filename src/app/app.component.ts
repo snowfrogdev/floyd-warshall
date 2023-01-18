@@ -91,13 +91,13 @@ export class AppComponent implements OnInit, AfterViewInit {
     return this.floydWarshallService.state.isDone;
   }
 
-  /* get progressValue(): Observable<number> {
+  get progressValue(): Observable<number> {
     return this.floydWarshallService.progressValue$;
   }
 
   get bufferValue(): Observable<number> {
     return this.floydWarshallService.bufferValue$;
-  } */
+  }
 
   readonly breakpoints = new Set<number>();
 
@@ -208,10 +208,11 @@ export class AppComponent implements OnInit, AfterViewInit {
     return path;
   }
 
- /*  seek(percentage: number) {
+  seek(percentage: number) {
     this.stateMachine.transitionTo('seeking');
-    this.floydWarshallService.seek(percentage);
-  } */
+    const stateIndex = this.floydWarshallService.getStateIndexFrom(percentage);
+    this.floydWarshallService.seek(stateIndex);
+  }
 
   seekEnd(dragEvent: MatSliderDragEvent) {
     switch (dragEvent.value) {

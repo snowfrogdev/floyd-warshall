@@ -6,7 +6,7 @@ import { FloydWarshallState, FloydWarshallStateDto } from './floyd-warshall.stat
 import { estimateNumberOfStates } from './utils';
 
 addEventListener('message', ({ data }: { data: FloydWarshallStateDto }) => {
-  const estimatedNumberOfStates = estimateNumberOfStates(data.adjacencyMatrix);
+  const estimatedNumberOfStates = estimateNumberOfStates(data.adjacencyMatrix.length);
   const checkPointSize = Math.max(1, Math.ceil(estimatedNumberOfStates / MAX_CHECKPOINTS));
   let index = 0;
   let state: FloydWarshallState = FloydWarshallState.from(data);

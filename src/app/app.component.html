@@ -44,18 +44,25 @@
     </div>
 
     <app-controls [state]="controlsState" (emit)="handleControls($event)"></app-controls>
-    <!-- <mat-progress-bar
+
+    <mat-progress-bar
       class="progress-bar"
       mode="buffer"
       [value]="progressValue | async"
       [bufferValue]="bufferValue | async"
     >
     </mat-progress-bar>
+
     <div class="slider-container">
       <mat-slider class="progress-slider" [min]="0" [max]="100">
-      <input matSliderThumb [value]="progressValue | async" (valueChange)="seek($event)" (dragEnd)="seekEnd($event)"/>
-    </mat-slider>
-    </div> -->
+        <input
+          matSliderThumb
+          [value]="progressValue | async"
+          (valueChange)="seek($event)"
+          (dragEnd)="seekEnd($event)"
+        />
+      </mat-slider>
+    </div>
   </div>
 
   <div class="right-panel">
