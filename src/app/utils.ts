@@ -28,3 +28,14 @@ export function get2DMatrixFrom<T>(matrix: T[] | readonly T[], matrixWidth: numb
   }
   return matrix2D;
 }
+
+export function estimateNumberOfStates(adjacencyMatrix: readonly (readonly number[])[]): number {
+  const totalTiles = adjacencyMatrix.length;
+  return (
+    0.000642105 * totalTiles ** 4 +
+    1.9431 * totalTiles ** 3 +
+    11.0115 * totalTiles ** 2 -
+    31.3267 * totalTiles +
+    112.277
+  );
+}

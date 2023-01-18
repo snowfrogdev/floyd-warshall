@@ -153,6 +153,7 @@ export class FloydWarshallState {
 }
 
 export interface FloydWarshallStateDto {
+  index: number;
   _currentLine: number;
   _isDone: false;
 

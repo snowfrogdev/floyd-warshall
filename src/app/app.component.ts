@@ -91,13 +91,13 @@ export class AppComponent implements OnInit, AfterViewInit {
     return this.floydWarshallService.state.isDone;
   }
 
-  get progressValue(): Observable<number> {
+  /* get progressValue(): Observable<number> {
     return this.floydWarshallService.progressValue$;
   }
 
   get bufferValue(): Observable<number> {
     return this.floydWarshallService.bufferValue$;
-  }
+  } */
 
   readonly breakpoints = new Set<number>();
 
@@ -110,12 +110,11 @@ export class AppComponent implements OnInit, AfterViewInit {
   ) {}
 
   ngOnInit() {
-    const tileMap = `......
-.#....
-.#....
-.#....
-.#....
-......`;
+    const tileMap = `.....
+.#...
+.#...
+.#...
+.....`;
 
     const rows: string[] = tileMap.split(/\r?\n/);
     this.numberOfRows = rows.length;
@@ -209,10 +208,10 @@ export class AppComponent implements OnInit, AfterViewInit {
     return path;
   }
 
-  seek(percentage: number) {
+ /*  seek(percentage: number) {
     this.stateMachine.transitionTo('seeking');
     this.floydWarshallService.seek(percentage);
-  }
+  } */
 
   seekEnd(dragEvent: MatSliderDragEvent) {
     switch (dragEvent.value) {
