@@ -235,25 +235,3 @@ export class AppComponent implements OnInit, AfterViewInit {
 class Tile {
   constructor(public color: string) {}
 }
-
-function resample(matrix: number[][], factor: number): number[][] {
-  const newRows = Math.floor(matrix.length / factor);
-  const newCols = Math.floor(matrix[0].length / factor);
-  const resampled: number[][] = [];
-
-  for (let row = 0; row < newRows; row++) {
-    const newRow: number[] = [];
-    for (let col = 0; col < newCols; col++) {
-      let sum = 0;
-      for (let i = 0; i < factor; i++) {
-        for (let j = 0; j < factor; j++) {
-          sum += matrix[row * factor + i][col * factor + j];
-        }
-      }
-      newRow.push(sum / (factor * factor));
-    }
-    resampled.push(newRow);
-  }
-
-  return resampled;
-}
