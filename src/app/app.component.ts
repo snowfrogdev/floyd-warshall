@@ -230,6 +230,72 @@ export class AppComponent implements OnInit, AfterViewInit {
       }
     }
   }
+
+  highCyclomaticComplexity(a: number, b: number, c: number, d: number): number {
+    let result = 0;
+    if (a > 0) {
+        if (b > 0) {
+            if (c > 0) {
+                if (d > 0) {
+                    result = a + b + c + d;
+                } else {
+                    result = a + b + c;
+                }
+            } else {
+                if (d > 0) {
+                    result = a + b + d;
+                } else {
+                    result = a + b;
+                }
+            }
+        } else {
+            if (c > 0) {
+                if (d > 0) {
+                    result = a + c + d;
+                } else {
+                    result = a + c;
+                }
+            } else {
+                if (d > 0) {
+                    result = a + d;
+                } else {
+                    result = a;
+                }
+            }
+        }
+    } else {
+        if (b > 0) {
+            if (c > 0) {
+                if (d > 0) {
+                    result = b + c + d;
+                } else {
+                    result = b + c;
+                }
+            } else {
+                if (d > 0) {
+                    result = b + d;
+                } else {
+                    result = b;
+                }
+            }
+        } else {
+            if (c > 0) {
+                if (d > 0) {
+                    result = c + d;
+                } else {
+                    result = c;
+                }
+            } else {
+                if (d > 0) {
+                    result = d;
+                } else {
+                    result = 0;
+                }
+            }
+        }
+    }
+    return result;
+}
 }
 
 class Tile {
