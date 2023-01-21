@@ -9,7 +9,7 @@ import {
 import { MatSliderDragEvent } from '@angular/material/slider';
 import { MatTooltip } from '@angular/material/tooltip';
 import { Observable } from 'rxjs';
-import { AdjacencyMatrixService } from './adjacency-matrix.service';
+import { AdjacencyMatrix } from './adjacency-matrix';
 import { ControlsEvent, ControlsState } from './controls/controls.component';
 import { FloydWarshallService } from './floyd-warshall.service';
 import { RulesEngineService } from './rules-engine.service';
@@ -27,7 +27,7 @@ export class AppComponent implements OnInit, AfterViewInit {
 
   speed = 100;
 
-  adjacencyMatrix!: number[][];
+  adjacencyMatrix!: AdjacencyMatrix;
   tiles!: Tile[];
   numberOfCols = 0;
   numberOfRows = 0;
@@ -102,7 +102,6 @@ export class AppComponent implements OnInit, AfterViewInit {
   readonly breakpoints = new Set<number>();
 
   constructor(
-    private adjacencyMatrixService: AdjacencyMatrixService,
     readonly stateMachine: StateMachineService,
     private rulesEngine: RulesEngineService,
     readonly floydWarshallService: FloydWarshallService,
@@ -124,8 +123,8 @@ export class AppComponent implements OnInit, AfterViewInit {
       .split('')
       .map((char) => (char === '#' ? new Tile('black') : new Tile('white')));
 
-    this.adjacencyMatrix = this.adjacencyMatrixService.generateAdjacencyMatrix(tileMap);
-    this.floydWarshallService.initialize(this.adjacencyMatrix);
+    this.adjacencyMatrix = new AdjacencyMatrix(tileMap);
+    this.floydWarshallService.initialize(this.adjacencyMatrix.matrix);
 
     this.floydWarshallService.state$.subscribe((state) => {
       if (state.isDone) {
