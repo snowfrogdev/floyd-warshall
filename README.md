@@ -1,4 +1,5 @@
-<img src="https://shields.io/endpoint?url=https://24f3-160-177-83-198.eu.ngrok.io/api/badge/snowfrogdev/floyd-warshall"/>
+<img src="https://shields.io/endpoint?url=https://nimble-metrics-test.azurewebsites.net/api/badge/snowfrogdev/floyd-warshall"/>
+
 # FloydWarshall
 
 This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 15.0.4.
