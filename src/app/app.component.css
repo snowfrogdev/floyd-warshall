@@ -23,6 +23,7 @@
 
 .tile-map {
   display: grid;
+  position: relative;
 }
 
 .tile {
@@ -66,7 +67,7 @@
 }
 
 .code {
-  font-family: 'Fira Code', monospace;
+  font-family: "Fira Code", monospace;
   font-size: 0.75rem;
   font-variant-ligatures: common-ligatures;
   font-feature-settings: "calt" 1;
@@ -77,3 +78,7 @@
   margin: 1rem 1rem 0 1rem;
 }
 
+.tile-map svg {
+  position: absolute;
+  z-index: 1;
+}

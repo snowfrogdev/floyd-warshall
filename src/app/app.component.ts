@@ -3,7 +3,9 @@ import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
   Component,
+  ElementRef,
   OnInit,
+  Renderer2,
   ViewChildren,
 } from '@angular/core';
 import { MatSliderDragEvent } from '@angular/material/slider';
@@ -105,7 +107,9 @@ export class AppComponent implements OnInit, AfterViewInit {
     readonly stateMachine: StateMachineService,
     private rulesEngine: RulesEngineService,
     readonly floydWarshallService: FloydWarshallService,
-    readonly cdr: ChangeDetectorRef
+    readonly cdr: ChangeDetectorRef,
+    readonly el: ElementRef,
+    readonly renderer: Renderer2
   ) {}
 
   ngOnInit() {
@@ -228,6 +232,16 @@ export class AppComponent implements OnInit, AfterViewInit {
         break;
       }
     }
+  }
+
+  getTilePosition(tileIndex: number): { x: number; y: number } {
+    const tile = this.el.nativeElement.querySelector(`#tileRef-${tileIndex}`);
+    const container = this.el.nativeElement.querySelector('.tile-map');
+    const containerRect = container.getBoundingClientRect();
+    const rect = tile.getBoundingClientRect();
+    const centerX = rect.left - containerRect.left + tile.offsetWidth / 2;
+    const centerY = rect.top - containerRect.top + tile.offsetHeight / 2;
+    return { x: centerX, y: centerY };
   }
 }
 
