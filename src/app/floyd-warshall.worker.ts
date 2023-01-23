@@ -21,6 +21,7 @@ addEventListener('message', ({ data }: { data: FloydWarshallStateDto }) => {
       postMessage({ index, ...state });
     }
   }
-
+  
+  postMessage({ index, ...state });
   self.close();
 });

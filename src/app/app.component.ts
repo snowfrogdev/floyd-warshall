@@ -13,6 +13,7 @@ import { MatTooltip } from '@angular/material/tooltip';
 import { Observable } from 'rxjs';
 import { AdjacencyMatrix } from './adjacency-matrix';
 import { ControlsEvent, ControlsState } from './controls/controls.component';
+import { dungeon } from './dungeon';
 import { FloydWarshallService } from './floyd-warshall.service';
 import { RulesEngineService } from './rules-engine.service';
 import { StateMachineService } from './state-machine.service';
@@ -113,11 +114,7 @@ export class AppComponent implements OnInit, AfterViewInit {
   ) {}
 
   ngOnInit() {
-    const tileMap = `.....
-.#...
-.#...
-.#...
-.....`;
+    const tileMap = dungeon;
 
     const rows: string[] = tileMap.split(/\r?\n/);
     this.numberOfRows = rows.length;

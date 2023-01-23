@@ -44,6 +44,11 @@ export class FloydWarshallService {
         this.checkpoints.set(data.index, state);
         const bufferValue = Math.ceil((data.index / this.estimatedNumberOfStates) * 100);
         this._bufferValue.next(bufferValue);
+
+        if (data._isDone) {
+          this._bufferValue.next(100);
+          this.estimatedNumberOfStates = data.index;
+        }
       };
     } else {
       // Web Workers are not supported in this environment.
