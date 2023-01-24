@@ -2,26 +2,36 @@
 
 import { MAX_CHECKPOINTS } from './constants';
 import { lines } from './floyd-warshall-algo';
-import { FloydWarshallState, FloydWarshallStateDto } from './floyd-warshall.state';
+import {
+  getCurrentLine,
+  getCurrentStep,
+  getIsDone,
+  setCurrentLine,
+  setCurrentStep,
+} from './floyd-warshall-encoded-state-helpers';
+import { InitialDto } from './initial-dto';
 import { estimateNumberOfStates } from './utils';
 
-addEventListener('message', ({ data }: { data: FloydWarshallStateDto }) => {
+addEventListener('message', ({ data }: { data: InitialDto }) => {
   const estimatedNumberOfStates = estimateNumberOfStates(data.adjacencyMatrix.length);
   const checkPointSize = Math.max(1, Math.ceil(estimatedNumberOfStates / MAX_CHECKPOINTS));
-  let index = 0;
-  let state: FloydWarshallState = FloydWarshallState.from(data);
+  let state: DataView = new DataView(data.state);
 
-  while (!state.isDone) {
-    const instruction = lines.get(state.currentLine)!;
-    const [newState = state, nextLine = state.currentLine + 1] = instruction(state);
-    state = newState.setCurrentLine(nextLine);
-    index++;
-    const isCheckPoint = index % checkPointSize === 0;
+  while (!getIsDone(state)) {
+    const currentLine = getCurrentLine(state);
+    const instruction = lines.get(currentLine)!;
+    const nextLine: number = instruction(state, data.adjacencyMatrix) ?? currentLine + 1;
+    setCurrentLine(nextLine, state);
+    const step = getCurrentStep(state) + 1;
+    setCurrentStep(step, state);
+    const isCheckPoint = step % checkPointSize === 0;
     if (isCheckPoint) {
-      postMessage({ index, ...state });
+      const copy = state.buffer.slice(0);
+      postMessage(copy, [copy]);
     }
   }
-  
-  postMessage({ index, ...state });
+
+  const copy = state.buffer.slice(0);
+  postMessage(copy, [copy]);
   self.close();
 });

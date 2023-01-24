@@ -1,123 +1,193 @@
-import { FloydWarshallState } from './floyd-warshall.state';
-import { get1DIndexFrom, get1DMatrixFrom } from './utils';
+import { get1DMatrixFrom } from './utils';
+import {
+  setDist,
+  setNext,
+  getV,
+  set_u,
+  get_u,
+  set_v,
+  get_v,
+  updateDist,
+  updateNext,
+  get_k,
+  set_k,
+  get_i,
+  set_i,
+  get_j,
+  set_j,
+  getDist_ij,
+  getNext_ij,
+  setIsDone,
+} from './floyd-warshall-encoded-state-helpers';
 
 /**
  * Each line of the algorithm is represented by a function that is executed when the line is reached.
- * The function returns a tuple of the new state and the next line to execute. If the next line is not
+ * The function takes in the state, mutates it and returns the next line to execute. If the next line is not
  * specified, the next line is the next line in the algorithm.
  */
-export const lines = new Map<number, (state: FloydWarshallState) => [FloydWarshallState?, number?]>([
-  [1, (state: FloydWarshallState) => []],
-  [2, (state: FloydWarshallState) => [state.set_dist(get1DMatrixFrom(state.adjacencyMatrix))]],
-  [3, (state: FloydWarshallState) => [state.set_next(Array.from({ length: state.V * state.V }, () => null))]],
+export const lines = new Map<
+  number,
+  (state: DataView, adjacencyMatrix?: readonly (readonly number[])[]) => number | void
+>([
+  [1, (state: DataView) => undefined],
+  [
+    2,
+    (state: DataView, adjacencyMatrix?: readonly (readonly number[])[]) =>
+      setDist(get1DMatrixFrom(adjacencyMatrix!), state),
+  ],
+  [
+    3,
+    (state: DataView) =>
+      setNext(
+        Array.from({ length: getV(state) * getV(state) }, () => null),
+        state
+      ),
+  ],
   [
     4,
-    (state: FloydWarshallState) => {
-      let newState = state.set_u(state.u === undefined ? 0 : state.u + 1);
-      if (newState.u! >= newState.V) {
-        newState = newState.set_u(undefined);
-        return [newState, 15];
+    (state: DataView) => {
+      let u = get_u(state);
+      u = u === undefined ? 0 : u + 1;
+      if (u >= getV(state)) {
+        set_u(undefined, state);
+        return 15;
       }
-      return [newState];
+      set_u(u, state);
+      return;
     },
   ],
   [
     5,
-    (state: FloydWarshallState) => {
-      let newState = state.set_v(state.v === undefined ? 0 : state.v + 1);
-      if (newState.v! >= newState.V) {
-        newState = newState.set_v(undefined);
-        return [newState, 4];
+    (state: DataView) => {
+      let v = get_v(state);
+      v = v === undefined ? 0 : v + 1;
+      if (v >= getV(state)) {
+        set_v(undefined, state);
+        return 4;
       }
-      return [newState];
+      set_v(v, state);
+      return;
     },
   ],
   [
     6,
-    (state: FloydWarshallState) => {
-      if (state.u === state.v) {
-        return [];
-      }
-      return [, 9];
+    (state: DataView) => {
+      if (get_u(state) === get_v(state)) return;
+      return 9;
     },
   ],
-  [7, (state: FloydWarshallState) => [state.update_dist(state.v!, state.v!, 0)]],
-  [8, (state: FloydWarshallState) => [state.update_next(state.v!, state.v!, state.v!), 5]],
+  [
+    7,
+    (state: DataView) => {
+      const v = get_v(state);
+      updateDist(v!, v!, 0, state);
+    },
+  ],
+  [
+    8,
+    (state: DataView) => {
+      const v = get_v(state);
+      updateNext(v!, v!, v!, state);
+      return 5;
+    },
+  ],
   [
     9,
-    (state: FloydWarshallState) => {
-      if (state.adjacencyMatrix[state.u!][state.v!] !== 0) {
-        return [];
-      }
-      return [, 12];
+    (state: DataView, adjacencyMatrix?: readonly (readonly number[])[]) => {
+      if (adjacencyMatrix![get_u(state)!][get_v(state)!] !== 0) return;
+      return 12;
     },
   ],
-  [10, (state: FloydWarshallState) => [state.update_next(state.u!, state.v!, state.v!), 5]],
-  [12, (state: FloydWarshallState) => [state.update_dist(state.u!, state.v!, Infinity)]],
-  [13, (state: FloydWarshallState) => [state.update_next(state.u!, state.v!, null), 5]],
+  [
+    10,
+    (state: DataView) => {
+      const v = get_v(state);
+      updateNext(get_u(state)!, v!, v!, state);
+      return 5;
+    },
+  ],
+  [12, (state: DataView) => updateDist(get_u(state)!, get_v(state)!, 32767, state)],
+  [
+    13,
+    (state: DataView) => {
+      updateNext(get_u(state)!, get_v(state)!, null, state);
+      return 5;
+    },
+  ],
   [
     15,
-    (state: FloydWarshallState) => {
-      let newState = state.set_k(state.k === undefined ? 0 : state.k + 1);
-      if (newState.k! >= newState.V) {
-        newState = newState.set_k(undefined);
-        return [newState, 22];
+    (state: DataView) => {
+      let k = get_k(state);
+      k = k === undefined ? 0 : k + 1;
+      if (k >= getV(state)) {
+        set_k(undefined, state);
+        return 22;
       }
-      return [newState];
+      set_k(k, state);
+      return;
     },
   ],
   [
     16,
-    (state: FloydWarshallState) => {
-      let newState = state.set_i(state.i === undefined ? 0 : state.i + 1);
-      if (newState.i! >= newState.V) {
-        newState = newState.set_i(undefined);
-        return [newState, 15];
+    (state: DataView) => {
+      let i = get_i(state);
+      i = i === undefined ? 0 : i + 1;
+      if (i >= getV(state)) {
+        set_i(undefined, state);
+        return 15;
       }
-      return [newState];
+      set_i(i, state);
+      return;
     },
   ],
   [
     17,
-    (state: FloydWarshallState) => {
-      let newState = state.set_j(state.j === undefined ? 0 : state.j + 1);
-      if (newState.j! >= newState.V) {
-        newState = newState.set_j(undefined);
-        return [newState, 16];
+    (state: DataView) => {
+      let j = get_j(state);
+      j = j === undefined ? 0 : j + 1;
+      if (j >= getV(state)) {
+        set_j(undefined, state);
+        return 16;
       }
-      return [newState];
+      set_j(j, state);
+      return;
     },
   ],
   [
     18,
-    (state: FloydWarshallState) => {
-      if (
-        state.dist![get1DIndexFrom(state.i!, state.j!, state.V)] >
-        state.dist![get1DIndexFrom(state.i!, state.k!, state.V)] +
-          state.dist![get1DIndexFrom(state.k!, state.j!, state.V)]
-      ) {
-        return [];
-      }
-      return [, 17];
+    (state: DataView) => {
+      const i = get_i(state)!;
+      const j = get_j(state)!;
+      const k = get_k(state)!;
+      if (getDist_ij(i, j, state) > getDist_ij(i, k, state) + getDist_ij(k, j, state)) return;
+      return 17;
     },
   ],
   [
     19,
-    (state: FloydWarshallState) => [
-      state.update_dist(
-        state.i!,
-        state.j!,
-        state.dist![get1DIndexFrom(state.i!, state.k!, state.V)] +
-          state.dist![get1DIndexFrom(state.k!, state.j!, state.V)]
-      ),
-    ],
+    (state: DataView) => {
+      const i = get_i(state)!;
+      const j = get_j(state)!;
+      const k = get_k(state)!;
+      const newDistance = getDist_ij(i, k, state) + getDist_ij(k, j, state);
+      updateDist(i, j, newDistance, state);
+    },
   ],
   [
     20,
-    (state: FloydWarshallState) => [
-      state.update_next(state.i!, state.j!, state.next![get1DIndexFrom(state.i!, state.k!, state.V)]),
-      17,
-    ],
+    (state: DataView) => {
+      const i = get_i(state)!;
+      const j = get_j(state)!;
+      const k = get_k(state)!;
+      const newNext = getNext_ij(i, k, state);
+      updateNext(i, j, newNext, state);
+      return 17;
+    },
   ],
-  [22, (state: FloydWarshallState) => [state.setIsDone(true)]],
+  [
+    22,
+    (state: DataView) => {
+      setIsDone(true, state);
+    },
+  ],
 ]);

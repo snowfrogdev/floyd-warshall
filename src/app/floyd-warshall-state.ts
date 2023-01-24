@@ -1,6 +1,36 @@
+import {
+  getCurrentLine,
+  getCurrentStep,
+  getDist,
+  getIsDone,
+  getNext,
+  getV,
+  get_i,
+  get_j,
+  get_k,
+  get_u,
+  get_v,
+  make,
+  setCurrentLine,
+  setCurrentStep,
+  setDist,
+  setIsDone,
+  setNext,
+  setV,
+  set_i,
+  set_j,
+  set_k,
+  set_u,
+  set_v,
+} from './floyd-warshall-encoded-state-helpers';
 import { get1DIndexFrom } from './utils';
 
 export class FloydWarshallState {
+  protected _currentStep = 0;
+  get currentStep() {
+    return this._currentStep;
+  }
+
   protected _currentLine: number = 1;
   get currentLine() {
     return this._currentLine;
@@ -51,6 +81,12 @@ export class FloydWarshallState {
 
   constructor(readonly adjacencyMatrix: readonly (readonly number[])[]) {
     this._V = adjacencyMatrix.length;
+  }
+
+  setCurrentStep(step: number): FloydWarshallState {
+    const copy = this.clone();
+    copy._currentStep = step;
+    return copy;
   }
 
   setCurrentLine(line: number): FloydWarshallState {
@@ -123,6 +159,7 @@ export class FloydWarshallState {
 
   clone(): FloydWarshallState {
     const floydWarshall = new FloydWarshallState(this.adjacencyMatrix);
+    floydWarshall._currentStep = this._currentStep;
     floydWarshall._currentLine = this._currentLine;
     floydWarshall._isDone = this._isDone;
     floydWarshall._V = this._V;
@@ -136,40 +173,36 @@ export class FloydWarshallState {
     return floydWarshall;
   }
 
-  static from(dto: FloydWarshallStateDto): FloydWarshallState {
-    const floydWarshall = new FloydWarshallState(dto.adjacencyMatrix);
-    floydWarshall._currentLine = dto._currentLine;
-    floydWarshall._isDone = dto._isDone;
-    floydWarshall._V = dto._V;
-    floydWarshall._dist = dto._dist;
-    floydWarshall._next = dto._next;
-    floydWarshall._u = dto._u;
-    floydWarshall._v = dto._v;
-    floydWarshall._k = dto._k;
-    floydWarshall._i = dto._i;
-    floydWarshall._j = dto._j;
+  static from(encodedState: ArrayBuffer, adjacencyMatrix: readonly (readonly number[])[]): FloydWarshallState {
+    const floydWarshall = new FloydWarshallState(adjacencyMatrix);
+    const view = new DataView(encodedState);
+    floydWarshall._currentStep = getCurrentStep(view);
+    floydWarshall._currentLine = getCurrentLine(view);
+    floydWarshall._isDone = getIsDone(view);
+    floydWarshall._V = getV(view);
+    floydWarshall._dist = getDist(view);
+    floydWarshall._next = getNext(view);
+    floydWarshall._u = get_u(view);
+    floydWarshall._v = get_v(view);
+    floydWarshall._k = get_k(view);
+    floydWarshall._i = get_i(view);
+    floydWarshall._j = get_j(view);
     return floydWarshall;
   }
-}
 
-export interface FloydWarshallStateDto {
-  index: number;
-  _currentLine: number;
-  _isDone: false;
-
-  _V: number;
-  _dist: number[] | undefined;
-
-  _next: (number | null)[] | undefined;
-
-  _u: number | undefined;
-
-  _v: number | undefined;
-
-  _k: number | undefined;
-
-  _i: number | undefined;
-
-  _j: number | undefined;
-  adjacencyMatrix: readonly (readonly number[])[];
+  toBuffer(): ArrayBuffer {
+    const view = make(this.adjacencyMatrix);
+    setCurrentStep(this._currentStep, view);
+    setCurrentLine(this._currentLine, view);
+    setIsDone(this._isDone, view);
+    setV(this._V, view);
+    setDist(this._dist, view);
+    setNext(this._next, view);
+    set_u(this._u, view);
+    set_v(this._v, view);
+    set_k(this._k, view);
+    set_i(this._i, view);
+    set_j(this._j, view);
+    return view.buffer;
+  }
 }
