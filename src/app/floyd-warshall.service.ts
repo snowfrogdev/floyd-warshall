@@ -1,24 +1,23 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, filter, Observable } from 'rxjs';
+import { BehaviorSubject, Observable } from 'rxjs';
 import { MAX_CHECKPOINTS } from './constants';
 import { lines } from './floyd-warshall-algo';
-import { getCurrentLine, getCurrentStep, setCurrentLine, setCurrentStep } from './floyd-warshall-encoded-state-helpers';
-import { FloydWarshallState } from './floyd-warshall-state';
+import { getCurrentLine, getCurrentStep, getIsDone, make, setCurrentLine, setCurrentStep } from './floyd-warshall-encoded-state-helpers';
 import { InitialDto } from './initial-dto';
-//import { InitialDto } from './floyd-warshall.worker';
 import { estimateNumberOfStates } from './utils';
 
 @Injectable({
   providedIn: 'root',
 })
 export class FloydWarshallService {
-  private checkpoints = new Map<number, FloydWarshallState>();
-  private buffer: [number, FloydWarshallState][] = [];
-  private _state = new BehaviorSubject<FloydWarshallState>(new FloydWarshallState([]));
-  state$: Observable<FloydWarshallState> = this._state.asObservable();
-  get state(): FloydWarshallState {
+  private checkpoints = new Map<number, DataView>();
+  private buffer: DataView[] = [];
+  private _state = new BehaviorSubject<DataView>(new DataView(new ArrayBuffer(0)));
+  state$: Observable<DataView> = this._state.asObservable();
+  get state(): DataView {
     return this._state.getValue();
   }
+  private adjacencyMatrix: readonly (readonly number[])[] = [];
 
   private _progressValue = new BehaviorSubject<number>(0);
   progressValue$: Observable<number> = this._progressValue.asObservable();
@@ -30,25 +29,27 @@ export class FloydWarshallService {
   private bufferSize = 0;
 
   initialize(adjacencyMatrix: readonly (readonly number[])[]): void {
+    this.adjacencyMatrix = adjacencyMatrix;
     this.estimatedNumberOfStates = estimateNumberOfStates(adjacencyMatrix.length);
     this.bufferSize = Math.max(1, Math.ceil(this.estimatedNumberOfStates / MAX_CHECKPOINTS));
 
-    this._state.next(new FloydWarshallState(adjacencyMatrix));
+    this._state.next(make(adjacencyMatrix));
     this.checkpoints.set(0, this.state);
 
     if (typeof Worker !== 'undefined') {
       const worker = new Worker(new URL('./floyd-warshall.worker', import.meta.url));
-      const initialDto: InitialDto = { adjacencyMatrix, state: this.state.toBuffer() };
+      const initialDto: InitialDto = { adjacencyMatrix, state: this.state.buffer };
       worker.postMessage(initialDto);
       worker.onmessage = ({ data }: { data: ArrayBuffer }) => {
-        const state = FloydWarshallState.from(data, adjacencyMatrix);
-        this.checkpoints.set(state.currentStep, state);
-        const bufferValue = Math.ceil((state.currentStep / this.estimatedNumberOfStates) * 100);
+        const state = new DataView(data);
+        const currentStep = getCurrentStep(state);
+        this.checkpoints.set(currentStep, state);
+        const bufferValue = Math.ceil((currentStep / this.estimatedNumberOfStates) * 100);
         this._bufferValue.next(bufferValue);
 
-        if (state.isDone) {
+        if (getIsDone(state)) {
           this._bufferValue.next(100);
-          this.estimatedNumberOfStates = state.currentStep;
+          this.estimatedNumberOfStates = currentStep;
         }
       };
     }
@@ -56,27 +57,28 @@ export class FloydWarshallService {
 
   stepBackward() {
     if (this.buffer.length === 0) {
-      this.seek(this.state.currentStep - 1);
+      this.seek(getCurrentStep(this.state) - 1);
       return;
     }
 
-    this._state.next(this.buffer.pop()![1]);
+    const state = this.buffer.pop()!;
+    this._state.next(state);
     this.updateProgressValue();
   }
 
   stepForward() {
-    this.buffer.push([this.state.currentStep, this.state]);
+    this.buffer.push(this.state);
 
-    const state = new DataView(this.state.toBuffer());
-    const currentLine = getCurrentLine(state);
+    const currentLine = getCurrentLine(this.state);
     const instruction = lines.get(currentLine)!;
-    const nextLine: number = instruction(state, this.state.adjacencyMatrix) ?? currentLine + 1;
-    setCurrentLine(nextLine, state);
-    const step = getCurrentStep(state) + 1;
-    setCurrentStep(step, state);
-    const newState = FloydWarshallState.from(state.buffer, this.state.adjacencyMatrix);
+    const nextLine: number = instruction(this.state, this.adjacencyMatrix) ?? currentLine + 1;
 
-    this._state.next(newState.setCurrentLine(nextLine));
+    const newState = new DataView(this.state.buffer.slice(0));
+    setCurrentLine(nextLine, newState);
+    const step = getCurrentStep(newState) + 1;
+    setCurrentStep(step, newState);
+
+    this._state.next(newState);
     if (this.buffer.length > this.bufferSize) {
       this.buffer.shift();
     }
@@ -91,38 +93,37 @@ export class FloydWarshallService {
 
   seek(stateIndex: number) {
     this.buffer = [];
-    const closest: [number, FloydWarshallState] = this.findClosestCheckPointBeforeOrAt(stateIndex);
 
-    let state: FloydWarshallState = closest![1];
+    let state: DataView = this.findClosestCheckPointBeforeOrAt(stateIndex);
 
-    if (state.currentStep === stateIndex) {
+    if (getCurrentStep(state) === stateIndex) {
       this._state.next(state);
       this.updateProgressValue();
       return;
     }
 
-    while (!state.isDone && state.currentStep <= stateIndex) {
-      this.buffer.push([state.currentStep, state]);
-      const bufferState = new DataView(this.state.toBuffer());
-      const currentLine = getCurrentLine(bufferState);
+    while (!getIsDone(state) && getCurrentStep(state) <= stateIndex) {
+      this.buffer.push(state);
+      const currentLine = getCurrentLine(state);
       const instruction = lines.get(currentLine)!;
-      const nextLine: number = instruction(bufferState, this.state.adjacencyMatrix) ?? currentLine + 1;
-      setCurrentLine(nextLine, bufferState);
-      const step = getCurrentStep(bufferState) + 1;
-      setCurrentStep(step, bufferState);
-      state = FloydWarshallState.from(bufferState.buffer, this.state.adjacencyMatrix);
+      const nextLine: number = instruction(state, this.adjacencyMatrix) ?? currentLine + 1;
+
+      state = new DataView(state.buffer.slice(0));
+      setCurrentLine(nextLine, state);
+      const step = getCurrentStep(state) + 1;
+      setCurrentStep(step, state);
     }
 
-    this._state.next(this.buffer.pop()![1]);
+    this._state.next(this.buffer.pop()!);
     this.updateProgressValue();
   }
 
-  private findClosestCheckPointBeforeOrAt(stateIndex: number): [number, FloydWarshallState] {
+  private findClosestCheckPointBeforeOrAt(stateIndex: number): DataView {
     if (this.checkpoints.has(stateIndex)) {
-      return [stateIndex, this.checkpoints.get(stateIndex)!];
+      return this.checkpoints.get(stateIndex)!;
     }
 
-    let closest: [number, FloydWarshallState];
+    let closest: [number, DataView];
     let closestDiff = Infinity;
     for (const [index, state] of this.checkpoints) {
       if (index > stateIndex) {
@@ -134,11 +135,11 @@ export class FloydWarshallService {
         closestDiff = diff;
       }
     }
-    return closest!;
+    return closest![1];
   }
 
   private updateProgressValue() {
-    const progressValue = Math.ceil((this.state.currentStep / this.estimatedNumberOfStates) * 100);
+    const progressValue = Math.ceil((getCurrentStep(this.state) / this.estimatedNumberOfStates) * 100);
     this._progressValue.next(progressValue);
   }
 

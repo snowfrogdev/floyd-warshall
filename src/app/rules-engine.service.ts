@@ -111,7 +111,7 @@ export class RulesEngineService {
     {
       condition: (input: unknown, context: AppComponent) => <ControlsEvent>input === 'step-back',
       action: (input: unknown, context: AppComponent) => {
-        if (context.floydWarshallService.state.currentLine === 2) {
+        if (context.state.currentLine === 2) {
           context.floydWarshallService.stepBackward();
           context.stateMachine.transitionTo('start');
           return;

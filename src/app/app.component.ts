@@ -14,6 +14,8 @@ import { Observable } from 'rxjs';
 import { AdjacencyMatrix } from './adjacency-matrix';
 import { ControlsEvent, ControlsState } from './controls/controls.component';
 import { dungeon } from './dungeon';
+import { getIsDone } from './floyd-warshall-encoded-state-helpers';
+import { FloydWarshallState } from './floyd-warshall-state';
 import { FloydWarshallService } from './floyd-warshall.service';
 import { RulesEngineService } from './rules-engine.service';
 import { StateMachineService } from './state-machine.service';
@@ -51,47 +53,56 @@ export class AppComponent implements OnInit, AfterViewInit {
     isStepForwardDisabled: false,
   };
 
+  private stateCache: [DataView, FloydWarshallState] = [new DataView(new ArrayBuffer(0)), new FloydWarshallState([])];
+  public get state(): FloydWarshallState {
+    if (this.stateCache[0] === this.floydWarshallService.state) return this.stateCache[1];
+
+    this.stateCache[0] = this.floydWarshallService.state;
+    this.stateCache[1] = FloydWarshallState.from(this.floydWarshallService.state.buffer, this.adjacencyMatrix.matrix);
+    return this.stateCache[1];
+  }
+
   get lineToHighlight(): number | undefined {
     if (this.stateMachine.currentState === 'start' || this.stateMachine.currentState === 'end') return;
-    return this.floydWarshallService.state.currentLine;
+    return this.state.currentLine;
   }
 
   get dist(): readonly (readonly number[])[] | undefined {
-    if (this.floydWarshallService.state.dist === undefined) return;
-    return get2DMatrixFrom(this.floydWarshallService.state.dist, this.V);
+    if (this.state.dist === undefined) return;
+    return get2DMatrixFrom(this.state.dist, this.V);
   }
 
   get next(): readonly (readonly (number | null)[])[] | undefined {
-    if (this.floydWarshallService.state.next === undefined) return;
-    return get2DMatrixFrom(this.floydWarshallService.state.next, this.V);
+    if (this.state.next === undefined) return;
+    return get2DMatrixFrom(this.state.next, this.V);
   }
 
   get V(): number {
-    return this.floydWarshallService.state.V;
+    return this.state.V;
   }
 
   get u(): number | undefined {
-    return this.floydWarshallService.state.u;
+    return this.state.u;
   }
 
   get v(): number | undefined {
-    return this.floydWarshallService.state.v;
+    return this.state.v;
   }
 
   get k(): number | undefined {
-    return this.floydWarshallService.state.k;
+    return this.state.k;
   }
 
   get i(): number | undefined {
-    return this.floydWarshallService.state.i;
+    return this.state.i;
   }
 
   get j(): number | undefined {
-    return this.floydWarshallService.state.j;
+    return this.state.j;
   }
 
   get isDone(): boolean {
-    return this.floydWarshallService.state.isDone;
+    return this.state.isDone;
   }
 
   get progressValue(): Observable<number> {
@@ -128,7 +139,7 @@ export class AppComponent implements OnInit, AfterViewInit {
     this.floydWarshallService.initialize(this.adjacencyMatrix.matrix);
 
     this.floydWarshallService.state$.subscribe((state) => {
-      if (state.isDone) {
+      if (getIsDone(state)) {
         this.stateMachine.transitionTo('end');
       }
     });
