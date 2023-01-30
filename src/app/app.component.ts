@@ -20,6 +20,7 @@ import { FloydWarshallService } from './floyd-warshall.service';
 import { RulesEngineService } from './rules-engine.service';
 import { StateMachineService } from './state-machine.service';
 import { get2DMatrixFrom } from './utils';
+import * as wasm from 'floyd-wasm';
 
 @Component({
   selector: 'app-root',
@@ -147,6 +148,8 @@ export class AppComponent implements OnInit, AfterViewInit {
     this.stateMachine.transition.subscribe((transition) => {
       this.rulesEngine.execute(transition, this);
     });
+
+    wasm.run();
   }
 
   ngAfterViewInit() {
