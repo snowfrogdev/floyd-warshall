@@ -11,13 +11,14 @@ import {
 } from './floyd-warshall-encoded-state-helpers';
 import { InitialDto } from './initial-dto';
 import { estimateNumberOfStates } from './utils';
+import * as floydWasm from 'floyd-wasm';
 
 addEventListener('message', ({ data }: { data: InitialDto }) => {
   const estimatedNumberOfStates = estimateNumberOfStates(data.adjacencyMatrix.length);
   const checkPointSize = Math.max(1, Math.ceil(estimatedNumberOfStates / MAX_CHECKPOINTS));
-  let state: DataView = new DataView(data.state);
-
-  while (!getIsDone(state)) {
+  //let state: DataView = new DataView(data.state);
+  floydWasm.run(data.adjacencyMatrix as any[], checkPointSize);
+  /* while (!getIsDone(state)) {
     const currentLine = getCurrentLine(state);
     const instruction = lines.get(currentLine)!;
     const nextLine: number = instruction(state, data.adjacencyMatrix) ?? currentLine + 1;
@@ -33,5 +34,5 @@ addEventListener('message', ({ data }: { data: InitialDto }) => {
 
   const copy = state.buffer.slice(0);
   postMessage(copy, [copy]);
-  self.close();
+  self.close(); */
 });

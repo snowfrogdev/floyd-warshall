@@ -2,7 +2,23 @@ import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { MAX_CHECKPOINTS } from './constants';
 import { lines } from './floyd-warshall-algo';
-import { getCurrentLine, getCurrentStep, getIsDone, make, setCurrentLine, setCurrentStep } from './floyd-warshall-encoded-state-helpers';
+import {
+  getCurrentLine,
+  getCurrentStep,
+  getIsDone,
+  make,
+  setCurrentLine,
+  setCurrentStep,
+  setDist,
+  setIsDone,
+  setNext,
+  setV,
+  set_i,
+  set_j,
+  set_k,
+  set_u,
+  set_v,
+} from './floyd-warshall-encoded-state-helpers';
 import { InitialDto } from './initial-dto';
 import { estimateNumberOfStates } from './utils';
 
@@ -40,8 +56,8 @@ export class FloydWarshallService {
       const worker = new Worker(new URL('./floyd-warshall.worker', import.meta.url));
       const initialDto: InitialDto = { adjacencyMatrix, state: this.state.buffer };
       worker.postMessage(initialDto);
-      worker.onmessage = ({ data }: { data: ArrayBuffer }) => {
-        const state = new DataView(data);
+      worker.onmessage = ({ data }: { data: RustFloydWarshallState }) => {
+        const state = new DataView(this.toBuffer(data));
         const currentStep = getCurrentStep(state);
         this.checkpoints.set(currentStep, state);
         const bufferValue = Math.ceil((currentStep / this.estimatedNumberOfStates) * 100);
@@ -146,4 +162,34 @@ export class FloydWarshallService {
   getStateIndexFrom(percentage: number) {
     return Math.round((percentage / 100) * (this.estimatedNumberOfStates - 1));
   }
+
+  toBuffer(state: RustFloydWarshallState): ArrayBuffer {
+    const view = make(this.adjacencyMatrix);
+    setCurrentStep(state.current_step, view);
+    setCurrentLine(state.current_line, view);
+    setIsDone(state.is_done, view);
+    setV(state.V, view);
+    setDist(state.dist, view);
+    setNext(state.next, view);
+    set_u(state.u, view);
+    set_v(state.v, view);
+    set_k(state.k, view);
+    set_i(state.i, view);
+    set_j(state.j, view);
+    return view.buffer;
+  }
+}
+
+interface RustFloydWarshallState {
+  current_step: number;
+  current_line: number;
+  is_done: boolean;
+  V: number;
+  u: number | undefined;
+  v: number | undefined;
+  k: number | undefined;
+  i: number | undefined;
+  j: number | undefined;
+  dist: number[];
+  next: number[];
 }
