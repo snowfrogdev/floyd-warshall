@@ -196,3 +196,10 @@ export function updateNext(i: number, j: number, value: number | null, view: Dat
 function getNextOffset(V: number): number {
   return DIST_OFFSET + V ** 2 * INT16_BYTES;
 }
+
+export function stateSizeInBytes(adjacencyMatrixLength: number): number {
+  const distMatrixSizeInBytes = adjacencyMatrixLength ** 2 * INT16_BYTES;
+  const nextMatrixSizeInBytes = adjacencyMatrixLength ** 2 * INT16_BYTES;
+  return DIST_OFFSET + distMatrixSizeInBytes + nextMatrixSizeInBytes;
+}
+

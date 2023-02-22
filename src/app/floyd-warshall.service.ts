@@ -2,7 +2,15 @@ import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { MAX_CHECKPOINTS } from './constants';
 import { lines } from './floyd-warshall-algo';
-import { getCurrentLine, getCurrentStep, getIsDone, make, setCurrentLine, setCurrentStep } from './floyd-warshall-encoded-state-helpers';
+import {
+  getCurrentLine,
+  getCurrentStep,
+  getIsDone,
+  make,
+  setCurrentLine,
+  setCurrentStep,
+  stateSizeInBytes,
+} from './floyd-warshall-encoded-state-helpers';
 import { InitialDto } from './initial-dto';
 import { estimateNumberOfStates } from './utils';
 
@@ -31,6 +39,7 @@ export class FloydWarshallService {
   initialize(adjacencyMatrix: readonly (readonly number[])[]): void {
     this.adjacencyMatrix = adjacencyMatrix;
     this.estimatedNumberOfStates = estimateNumberOfStates(adjacencyMatrix.length);
+    console.log(stateSizeInBytes(adjacencyMatrix.length));
     this.bufferSize = Math.max(1, Math.ceil(this.estimatedNumberOfStates / MAX_CHECKPOINTS));
 
     this._state.next(make(adjacencyMatrix));
