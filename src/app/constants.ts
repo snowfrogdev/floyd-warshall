@@ -1,1 +1,1 @@
-export const MAX_CHECKPOINTS = 10_000;
+export const MAX_CHECKPOINTS = 1_000;
